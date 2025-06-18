@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Search, Download, Music, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,20 +12,28 @@ import Navbar from '@/components/Navbar';
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('search');
 
-  const getActiveTab = () => {
+  // Update active tab based on URL without causing re-renders
+  useEffect(() => {
     const path = location.pathname;
-    if (path.includes('search')) return 'search';
-    if (path.includes('downloads')) return 'downloads';
-    if (path.includes('playlists')) return 'playlists';
-    if (path.includes('now-playing')) return 'now-playing';
-    return 'search';
-  };
+    let newTab = 'search';
+    
+    if (path.includes('downloads')) newTab = 'downloads';
+    else if (path.includes('playlists')) newTab = 'playlists';
+    else if (path.includes('now-playing')) newTab = 'now-playing';
+    else if (path.includes('search') || path === '/') newTab = 'search';
+    
+    if (newTab !== activeTab) {
+      setActiveTab(newTab);
+    }
+  }, [location.pathname, activeTab]);
 
-  const activeTab = getActiveTab();
-
-  const setActiveTab = (tab: string) => {
-    navigate(`/${tab}`);
+  const handleTabChange = (tab: string) => {
+    if (tab !== activeTab) {
+      setActiveTab(tab);
+      navigate(`/${tab === 'search' ? '' : tab}`, { replace: true });
+    }
   };
 
   const renderContent = () => {
@@ -63,7 +70,7 @@ const Layout = () => {
           <Button
             variant={activeTab === 'search' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => setActiveTab('search')}
+            onClick={() => handleTabChange('search')}
             className={`flex-col h-auto py-2 px-2 sm:px-3 gap-1 font-orbitron text-xs uppercase tracking-wider min-h-[60px] ${
               activeTab === 'search' ? 'bat-glow text-primary-foreground' : 'hover:bat-glow-blue'
             }`}
@@ -74,7 +81,7 @@ const Layout = () => {
           <Button
             variant={activeTab === 'downloads' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => setActiveTab('downloads')}
+            onClick={() => handleTabChange('downloads')}
             className={`flex-col h-auto py-2 px-2 sm:px-3 gap-1 font-orbitron text-xs uppercase tracking-wider min-h-[60px] ${
               activeTab === 'downloads' ? 'bat-glow text-primary-foreground' : 'hover:bat-glow-blue'
             }`}
@@ -85,7 +92,7 @@ const Layout = () => {
           <Button
             variant={activeTab === 'playlists' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => setActiveTab('playlists')}
+            onClick={() => handleTabChange('playlists')}
             className={`flex-col h-auto py-2 px-2 sm:px-3 gap-1 font-orbitron text-xs uppercase tracking-wider min-h-[60px] ${
               activeTab === 'playlists' ? 'bat-glow text-primary-foreground' : 'hover:bat-glow-blue'
             }`}
@@ -96,7 +103,7 @@ const Layout = () => {
           <Button
             variant={activeTab === 'now-playing' ? 'default' : 'ghost'}
             size="sm"
-            onClick={() => setActiveTab('now-playing')}
+            onClick={() => handleTabChange('now-playing')}
             className={`flex-col h-auto py-2 px-2 sm:px-3 gap-1 font-orbitron text-xs uppercase tracking-wider min-h-[60px] ${
               activeTab === 'now-playing' ? 'bat-glow text-primary-foreground' : 'hover:bat-glow-blue'
             }`}

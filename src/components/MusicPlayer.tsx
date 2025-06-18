@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Play, Pause, SkipBack, SkipForward, Volume2 } from 'lucide-react';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { usePlayer } from '@/hooks/usePlayerContext';
 import { formatTime } from '@/utils/formatters';
 
 const MusicPlayer = () => {
@@ -18,7 +17,7 @@ const MusicPlayer = () => {
     handlePrevious,
     seekTo,
     setVolume,
-  } = useAudioPlayer();
+  } = usePlayer();
 
   if (!currentSong) {
     return null;

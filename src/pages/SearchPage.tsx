@@ -1,55 +1,116 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Search, Download, Play } from 'lucide-react';
 import { Song } from '@/types/music';
 import { useToast } from '@/hooks/use-toast';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { usePlayer } from '@/hooks/usePlayerContext';
+
+// Create a global state manager for search
+const searchStateManager = {
+  query: '',
+  results: [] as Song[],
+  loading: false,
+  listeners: new Set<() => void>(),
+  
+  setQuery(newQuery: string) {
+    this.query = newQuery;
+    this.notifyListeners();
+  },
+  
+  setResults(newResults: Song[]) {
+    this.results = newResults;
+    this.notifyListeners();
+  },
+  
+  setLoading(loading: boolean) {
+    this.loading = loading;
+    this.notifyListeners();
+  },
+  
+  subscribe(listener: () => void) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  },
+  
+  notifyListeners() {
+    this.listeners.forEach(listener => listener());
+  }
+};
 
 const SearchPage = () => {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Song[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [query, setQuery] = useState(searchStateManager.query);
+  const [results, setResults] = useState<Song[]>(searchStateManager.results);
+  const [loading, setLoading] = useState(searchStateManager.loading);
   const { toast } = useToast();
-  const { playPlaylist } = useAudioPlayer();
+  const { playPlaylist } = usePlayer();
+
+  // Subscribe to global state changes
+  useEffect(() => {
+    const unsubscribe = searchStateManager.subscribe(() => {
+      setQuery(searchStateManager.query);
+      setResults(searchStateManager.results);
+      setLoading(searchStateManager.loading);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Update global state when local state changes
+  const updateQuery = (newQuery: string) => {
+    setQuery(newQuery);
+    searchStateManager.setQuery(newQuery);
+  };
+
+  const updateResults = (newResults: Song[]) => {
+    setResults(newResults);
+    searchStateManager.setResults(newResults);
+  };
+
+  const updateLoading = (newLoading: boolean) => {
+    setLoading(newLoading);
+    searchStateManager.setLoading(newLoading);
+  };
 
   // Mock search function - replace with real YouTube API
   const handleSearch = async () => {
     if (!query.trim()) return;
     
-    setLoading(true);
+    updateLoading(true);
     try {
       // Mock data for demonstration - replace with actual YouTube API call
       const mockResults: Song[] = [
         {
-          id: '1',
+          id: `${Date.now()}-1`,
           title: 'The Dark Knight Rises Theme - ' + query,
           channel: 'Hans Zimmer',
           duration: '4:32',
           thumbnail: 'https://picsum.photos/320/180?random=1',
+          url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
           isDownloaded: false,
         },
         {
-          id: '2',
+          id: `${Date.now()}-2`,
           title: 'Batman Begins Soundtrack - ' + query,
           channel: 'Christopher Nolan',
           duration: '3:45',
           thumbnail: 'https://picsum.photos/320/180?random=2',
+          url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
           isDownloaded: false,
         },
         {
-          id: '3',
+          id: `${Date.now()}-3`,
           title: 'Gotham City Anthem - ' + query,
           channel: 'Epic Music',
           duration: '5:12',
           thumbnail: 'https://picsum.photos/320/180?random=3',
+          url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
           isDownloaded: false,
         },
       ];
       
-      setResults(mockResults);
+      updateResults(mockResults);
       toast({
         title: "SEARCH COMPLETE",
         description: `Found ${mockResults.length} results for "${query}"`,
@@ -61,7 +122,7 @@ const SearchPage = () => {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      updateLoading(false);
     }
   };
 
@@ -73,11 +134,26 @@ const SearchPage = () => {
     
     // Mock download process - replace with actual download logic
     setTimeout(() => {
+      // Save to localStorage for downloads page
+      const savedDownloads = localStorage.getItem('downloadedSongs');
+      const downloads = savedDownloads ? JSON.parse(savedDownloads) : [];
+      
+      const downloadedSong = { ...song, isDownloaded: true, localPath: song.url };
+      downloads.push(downloadedSong);
+      
+      localStorage.setItem('downloadedSongs', JSON.stringify(downloads));
+      
+      // Update the song in results to show as downloaded
+      const updatedResults = results.map(r => 
+        r.id === song.id ? { ...r, isDownloaded: true } : r
+      );
+      updateResults(updatedResults);
+      
       toast({
         title: "DOWNLOAD COMPLETE",
         description: `"${song.title}" has been downloaded.`,
       });
-    }, 3000);
+    }, 2000);
   };
 
   const handlePlay = (song: Song, index: number) => {
@@ -94,7 +170,7 @@ const SearchPage = () => {
           <Input
             placeholder="Search for songs, artists, or albums..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => updateQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             className="flex-1 bg-bat-grey border-border focus:border-primary focus:bat-glow font-orbitron text-sm"
           />

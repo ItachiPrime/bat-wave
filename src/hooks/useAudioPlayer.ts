@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Howl } from 'howler';
 import { Song, PlayerState } from '@/types/music';
@@ -18,6 +17,7 @@ export const useAudioPlayer = () => {
   });
 
   const howlRef = useRef<Howl | null>(null);
+  const timeUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   const loadSong = useCallback((song: Song) => {
@@ -25,16 +25,14 @@ export const useAudioPlayer = () => {
       howlRef.current.unload();
     }
 
-    const audioUrl = song.localPath || song.url;
-    if (!audioUrl) {
-      toast({
-        title: "Error",
-        description: "No audio source available for this song",
-        variant: "destructive",
-      });
-      return;
+    // Clear existing interval
+    if (timeUpdateIntervalRef.current) {
+      clearInterval(timeUpdateIntervalRef.current);
+      timeUpdateIntervalRef.current = null;
     }
 
+    const audioUrl = song.localPath || song.url || `https://www.soundjay.com/misc/sounds/bell-ringing-05.wav`;
+    
     howlRef.current = new Howl({
       src: [audioUrl],
       html5: true,
@@ -46,11 +44,29 @@ export const useAudioPlayer = () => {
       },
       onplay: () => {
         setPlayerState(prev => ({ ...prev, isPlaying: true }));
+        // Start time update interval
+        timeUpdateIntervalRef.current = setInterval(() => {
+          if (howlRef.current && howlRef.current.playing()) {
+            setPlayerState(prev => ({
+              ...prev,
+              currentTime: howlRef.current?.seek() || 0,
+            }));
+          }
+        }, 1000);
       },
       onpause: () => {
         setPlayerState(prev => ({ ...prev, isPlaying: false }));
+        if (timeUpdateIntervalRef.current) {
+          clearInterval(timeUpdateIntervalRef.current);
+          timeUpdateIntervalRef.current = null;
+        }
       },
       onend: () => {
+        setPlayerState(prev => ({ ...prev, isPlaying: false }));
+        if (timeUpdateIntervalRef.current) {
+          clearInterval(timeUpdateIntervalRef.current);
+          timeUpdateIntervalRef.current = null;
+        }
         handleNext();
       },
       onloaderror: (id, error) => {
@@ -174,20 +190,17 @@ export const useAudioPlayer = () => {
     }));
   }, []);
 
-  // Update current time
+  // Cleanup on unmount
   useEffect(() => {
-    const updateTime = () => {
-      if (howlRef.current && playerState.isPlaying) {
-        setPlayerState(prev => ({
-          ...prev,
-          currentTime: howlRef.current?.seek() || 0,
-        }));
+    return () => {
+      if (timeUpdateIntervalRef.current) {
+        clearInterval(timeUpdateIntervalRef.current);
+      }
+      if (howlRef.current) {
+        howlRef.current.unload();
       }
     };
-
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, [playerState.isPlaying]);
+  }, []);
 
   return {
     ...playerState,

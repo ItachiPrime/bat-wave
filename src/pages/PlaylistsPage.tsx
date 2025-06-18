@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,14 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Play, Music } from 'lucide-react';
 import { Playlist } from '@/types/music';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { usePlayer } from '@/hooks/usePlayerContext';
 import { useToast } from '@/hooks/use-toast';
 
 const PlaylistsPage = () => {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const { playPlaylist } = useAudioPlayer();
+  const { playPlaylist } = usePlayer();
   const { toast } = useToast();
 
   useEffect(() => {

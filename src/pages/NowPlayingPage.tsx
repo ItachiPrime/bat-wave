@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Card, CardContent } from '@/components/ui/card';
 import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2 } from 'lucide-react';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { usePlayer } from '@/hooks/usePlayerContext';
 import { formatTime } from '@/utils/formatters';
 
 const NowPlayingPage = () => {
@@ -26,7 +25,7 @@ const NowPlayingPage = () => {
     toggleShuffle,
     toggleRepeat,
     playPlaylist,
-  } = useAudioPlayer();
+  } = usePlayer();
 
   if (!currentSong) {
     return (
