@@ -1,12 +1,23 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { Card, CardContent } from '@/components/ui/card';
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2 } from 'lucide-react';
-import { usePlayer } from '@/hooks/usePlayerContext';
-import { formatTime } from '@/utils/formatters';
+import React, { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Shuffle,
+  Repeat,
+  Volume2,
+} from "lucide-react";
+import { usePlayer } from "@/hooks/usePlayerContext";
+import { formatTime } from "@/utils/formatters";
+
+const fallbackThumbnail = "/fallback-thumbnail.png";
 
 const NowPlayingPage = () => {
+  // This single call now gets the state from the context provider
   const {
     currentSong,
     isPlaying,
@@ -32,8 +43,12 @@ const NowPlayingPage = () => {
       <div className="flex-1 p-3 sm:p-4 flex items-center justify-center mobile-full-height">
         <div className="text-center text-muted-foreground">
           <Play className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 opacity-50" />
-          <p className="text-base sm:text-lg mb-2 font-orbitron uppercase tracking-wider responsive-text-lg">NO SONG PLAYING</p>
-          <p className="text-sm font-orbitron">Choose a song from Search or Downloads to start listening</p>
+          <p className="text-base sm:text-lg mb-2 font-orbitron uppercase tracking-wider responsive-text-lg">
+            NO SONG PLAYING
+          </p>
+          <p className="text-sm font-orbitron">
+            Choose a song to start listening
+          </p>
         </div>
       </div>
     );
@@ -51,14 +66,16 @@ const NowPlayingPage = () => {
     playPlaylist(playlist, index);
   };
 
+  const isSingleSong = playlist.length <= 1;
+
   return (
     <div className="flex-1 p-3 sm:p-4 space-y-4 sm:space-y-6 overflow-auto mobile-full-height">
       {/* Album Art */}
       <div className="flex justify-center">
         <div className="relative">
           <img
-            src={currentSong.thumbnail}
-            alt={currentSong.title}
+            src={currentSong.thumbnail || fallbackThumbnail}
+            alt={currentSong.title || "Unknown Title"}
             className="w-48 h-48 sm:w-64 sm:h-64 rounded-lg object-cover shadow-lg border-2 border-primary/30 bat-glow"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent rounded-lg" />
@@ -68,9 +85,11 @@ const NowPlayingPage = () => {
       {/* Song Info */}
       <div className="text-center space-y-2">
         <h1 className="text-lg sm:text-xl font-bold truncate font-orbitron uppercase tracking-wider text-primary responsive-text-xl px-4">
-          {currentSong.title}
+          {currentSong.title || "Untitled"}
         </h1>
-        <p className="text-muted-foreground font-orbitron text-sm sm:text-base">{currentSong.channel}</p>
+        <p className="text-muted-foreground font-orbitron text-sm sm:text-base">
+          {currentSong.channel || "Unknown Artist"}
+        </p>
       </div>
 
       {/* Progress */}
@@ -90,27 +109,29 @@ const NowPlayingPage = () => {
 
       {/* Main Controls */}
       <div className="flex items-center justify-center gap-4 sm:gap-6">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           size="icon"
           onClick={toggleShuffle}
-          className={`h-8 w-8 sm:h-10 sm:w-10 ${shuffle ? 'text-primary bat-glow' : 'hover:bat-glow-blue'}`}
+          className={`h-8 w-8 sm:h-10 sm:w-10 ${
+            shuffle ? "text-primary bat-glow" : "hover:bat-glow-blue"
+          }`}
         >
           <Shuffle className="h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
-        
-        <Button 
-          variant="ghost" 
-          size="icon" 
+
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={handlePrevious}
           className="hover:bat-glow-blue h-8 w-8 sm:h-10 sm:w-10"
         >
           <SkipBack className="h-5 w-5 sm:h-6 sm:w-6" />
         </Button>
-        
-        <Button 
-          size="icon" 
-          className="h-12 w-12 sm:h-14 sm:w-14 bat-glow hover:animate-glow-pulse" 
+
+        <Button
+          size="icon"
+          className="h-12 w-12 sm:h-14 sm:w-14 bat-glow hover:animate-glow-pulse"
           onClick={togglePlay}
         >
           {isPlaying ? (
@@ -119,21 +140,23 @@ const NowPlayingPage = () => {
             <Play className="h-6 w-6 sm:h-7 sm:w-7" />
           )}
         </Button>
-        
-        <Button 
-          variant="ghost" 
-          size="icon" 
+
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={handleNext}
           className="hover:bat-glow-blue h-8 w-8 sm:h-10 sm:w-10"
         >
           <SkipForward className="h-5 w-5 sm:h-6 sm:w-6" />
         </Button>
-        
-        <Button 
-          variant="ghost" 
+
+        <Button
+          variant="ghost"
           size="icon"
           onClick={toggleRepeat}
-          className={`h-8 w-8 sm:h-10 sm:w-10 ${repeat !== 'none' ? 'text-primary bat-glow' : 'hover:bat-glow-blue'}`}
+          className={`h-8 w-8 sm:h-10 sm:w-10 ${
+            repeat !== "none" ? "text-primary bat-glow" : "hover:bat-glow-blue"
+          }`}
         >
           <Repeat className="h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
@@ -152,29 +175,31 @@ const NowPlayingPage = () => {
       </div>
 
       {/* Queue */}
-      {playlist.length > 1 && (
+      {!isSingleSong && (
         <div className="space-y-3">
-          <h3 className="font-medium font-orbitron uppercase tracking-wider text-primary text-sm sm:text-base">UP NEXT</h3>
+          <h3 className="font-medium font-orbitron uppercase tracking-wider text-primary text-sm sm:text-base">
+            UP NEXT
+          </h3>
           <div className="space-y-2 max-h-48 sm:max-h-64 overflow-auto">
             {playlist.slice(currentIndex + 1).map((song, index) => (
-              <Card 
-                key={`${song.id}-${index}`} 
+              <Card
+                key={`${song.id}-${index}`}
                 className="cursor-pointer hover:bg-accent/50 bg-card border-border hover:border-primary/50 transition-all duration-300"
                 onClick={() => handleQueueSong(currentIndex + 1 + index)}
               >
                 <CardContent className="p-3">
                   <div className="flex gap-3">
                     <img
-                      src={song.thumbnail}
-                      alt={song.title}
+                      src={song.thumbnail || fallbackThumbnail}
+                      alt={song.title || "Untitled"}
                       className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover border border-border flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate font-orbitron uppercase tracking-wide">
-                        {song.title}
+                        {song.title || "Untitled"}
                       </p>
                       <p className="text-xs text-muted-foreground truncate font-orbitron">
-                        {song.channel}
+                        {song.channel || "Unknown Artist"}
                       </p>
                     </div>
                   </div>

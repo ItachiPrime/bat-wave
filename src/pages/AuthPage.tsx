@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
 
 const AuthPage = () => {
   const [email, setEmail] = useState('');
@@ -16,17 +15,12 @@ const AuthPage = () => {
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (user) {
-      navigate('/');
-    }
-  }, [user, navigate]);
-
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     await signIn(email, password);
     setLoading(false);
+    navigate('/search');
   };
 
   const handleSignUp = async (e: React.FormEvent) => {

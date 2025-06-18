@@ -1,5 +1,25 @@
-import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
-import './index.css'
+// src/main.tsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
+import { AudioPlayerProvider } from '@/hooks/usePlayerContext'; // Correct path
+import { Toaster } from "@/components/ui/toaster";
 
-createRoot(document.getElementById("root")!).render(<App />);
+console.log("🔥 main.tsx script executed/re-executed. Timestamp:", new Date().toLocaleString()); // <-- ADD THIS
+const rootElement = document.getElementById('root');
+
+if (rootElement) {
+  const root = ReactDOM.createRoot(rootElement);
+  console.log("🚀 ReactDOM.createRoot().render() called. Timestamp:", new Date().toLocaleString()); // <-- ADD THIS
+  root.render(
+    <React.StrictMode>
+      <AudioPlayerProvider>
+        <App />
+        <Toaster />
+      </AudioPlayerProvider>
+    </React.StrictMode>,
+  );
+} else {
+  console.error("❌ Root element with ID 'root' not found in document!");
+}

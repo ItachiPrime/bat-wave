@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Download, Music, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MusicPlayer from '@/components/MusicPlayer';
@@ -36,35 +36,27 @@ const Layout = () => {
     }
   };
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'search':
-        return <SearchPage />;
-      case 'downloads':
-        return <DownloadsPage />;
-      case 'playlists':
-        return <PlaylistsPage />;
-      case 'now-playing':
-        return <NowPlayingPage />;
-      default:
-        return <SearchPage />;
-    }
-  };
+  const tabs = [
+    { key: 'search', icon: Search, label: 'SEARCH' },
+    { key: 'downloads', icon: Download, label: 'DOWNLOADS' },
+    { key: 'playlists', icon: Music, label: 'PLAYLISTS' },
+    { key: 'now-playing', icon: Play, label: 'NOW PLAYING' },
+  ];
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
-      {/* Navbar */}
+      {/* Top Navbar */}
       <Navbar />
 
       {/* Main Content */}
       <main className="flex-1 overflow-hidden">
-        {renderContent()}
+        <Outlet />
       </main>
 
-      {/* Music Player */}
+      {/* Music Player Always at Bottom */}
       <MusicPlayer />
 
-      {/* Bottom Navigation - Mobile Optimized */}
+      {/* Bottom Navigation for Mobile */}
       <nav className="border-t border-border bg-card/80 backdrop-blur-sm p-2 safe-area-padding-bottom">
         <div className="flex justify-around max-w-md mx-auto">
           <Button

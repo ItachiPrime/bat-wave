@@ -1,23 +1,40 @@
-
+// src/components/player-provider.tsx
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useAudioPlayer } from './useAudioPlayer';
+import { useAudioPlayer } from '@/hooks/useAudioPlayer'
+import { Song, PlayerState, RepeatMode } from '@/types/music';
 
-const PlayerContext = createContext<ReturnType<typeof useAudioPlayer> | null>(null);
+interface AudioPlayerContextType extends PlayerState {
+  play: () => void;
+  pause: () => void;
+  togglePlay: () => void;
+  seekTo: (time: number) => void;
+  setVolume: (volume: number) => void;
+  handleNext: () => void;
+  handlePrevious: () => void;
+  playPlaylist: (songs: Song[], startIndex?: number) => void;
+  playSingleSong: (song: Song) => void;
+  toggleShuffle: () => void;
+  toggleRepeat: () => void;
+  playerLoading: boolean;
+}
 
-export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(undefined);
+
+export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const player = useAudioPlayer();
-  
+
   return (
-    <PlayerContext.Provider value={player}>
+    <AudioPlayerContext.Provider value={player}>
       {children}
-    </PlayerContext.Provider>
+    </AudioPlayerContext.Provider>
   );
 };
 
 export const usePlayer = () => {
-  const context = useContext(PlayerContext);
-  if (!context) {
-    throw new Error('usePlayer must be used within a PlayerProvider');
+  const context = useContext(AudioPlayerContext);
+  if (context === undefined) {
+    throw new Error('usePlayer must be used within an AudioPlayerProvider. ' +
+                    'Ensure your root component is wrapped with <AudioPlayerProvider>.');
   }
   return context;
 };

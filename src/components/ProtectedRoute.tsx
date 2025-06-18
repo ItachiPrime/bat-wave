@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import AuthPage from '@/pages/AuthPage';
+import { Navigate, useLocation } from 'react-router-dom'; // <-- Import Navigate and useLocation
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -9,6 +9,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
+  const location = useLocation(); // <-- Get current location to pass to AuthPage
 
   if (loading) {
     return (
@@ -26,7 +27,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!user) {
-    return <AuthPage />;
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;

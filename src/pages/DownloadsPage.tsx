@@ -5,19 +5,88 @@ import { Play, Trash2, Download } from 'lucide-react';
 import { Song } from '@/types/music';
 import { usePlayer } from '@/hooks/usePlayerContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const DownloadsPage = () => {
   const [downloads, setDownloads] = useState<Song[]>([]);
+  const [loading, setLoading] = useState(false); // Add this
   const { playPlaylist } = usePlayer();
   const { toast } = useToast();
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load downloaded songs from localStorage
-    const savedDownloads = localStorage.getItem('downloadedSongs');
-    if (savedDownloads) {
-      setDownloads(JSON.parse(savedDownloads));
-    }
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      setUserId(data?.user?.id || null);
+    })();
   }, []);
+
+  useEffect(() => {
+    const fetchDownloads = async () => {
+      if (!userId) return;
+      setLoading(true); // Start loading
+
+      const { data: songsData, error: songsError } = await supabase
+        .from('songs')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (songsError) {
+        console.error('Failed to fetch songs:', songsError.message);
+        setLoading(false); // End loading
+        return;
+      }
+
+      const songsWithUrls = await Promise.all(
+        (songsData ?? []).map(async (song) => {
+          // Sanitize filename
+          const baseFilename = song.title
+            .replace(/[/\\?%*:|"<>]/g, "")
+            .replace(/[^\w\s]/gi, "_")
+            .replace(/\s+/g, "_");
+
+          // Audio file path
+          const audioPath = `${userId}/${baseFilename}.mp3`;
+          const { data: audioSigned, error: audioErr } = await supabase.storage
+            .from('music')
+            .createSignedUrl(audioPath, 3600);
+
+          // Use thumbnail path from DB (may be null/undefined)
+          let thumbSignedUrl = "";
+          if (song.thumbnail) {
+            const { data: thumbSigned, error: thumbErr } = await supabase.storage
+              .from('music')
+              .createSignedUrl(song.thumbnail, 3600);
+            if (!thumbErr && thumbSigned?.signedUrl) {
+              thumbSignedUrl = thumbSigned.signedUrl;
+            }
+          }
+
+          if (audioErr || !audioSigned?.signedUrl) {
+            console.error('Failed to create signed URL:', audioErr?.message);
+            return null;
+          }
+
+          return {
+            id: song.id,
+            title: song.title,
+            channel: song.channel,
+            duration: song.duration,
+            thumbnail: thumbSignedUrl || "", // fallback to empty if not found
+            audioUrl: audioSigned.signedUrl,
+            isDownloaded: true,
+          };
+        })
+      );
+
+      const validSongs = songsWithUrls.filter(Boolean) as Song[];
+      setDownloads(validSongs);
+      setLoading(false); // End loading
+    };
+
+    fetchDownloads();
+  }, [userId]);
 
   const handlePlay = (song: Song, index: number) => {
     playPlaylist(downloads, index);
@@ -56,7 +125,14 @@ const DownloadsPage = () => {
         )}
       </div>
 
-      {downloads.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto bat-glow"></div>
+          <p className="mt-2 text-muted-foreground font-orbitron uppercase tracking-wider text-sm">
+            LOADING DOWNLOADS...
+          </p>
+        </div>
+      ) : downloads.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-muted-foreground mb-4">
             <Download className="h-12 w-12 mx-auto mb-2 opacity-50" />

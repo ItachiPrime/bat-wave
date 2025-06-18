@@ -71,7 +71,7 @@ const PlaylistsPage = () => {
               <span className="sm:hidden">CREATE</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-card border-border mx-4 max-w-sm sm:max-w-md">
+          <DialogContent className="bg-card border-border mx-2 max-w-sm sm:max-w-md ml-0">
             <DialogHeader>
               <DialogTitle className="font-orbitron uppercase tracking-wider text-primary text-sm sm:text-base">
                 CREATE NEW PLAYLIST

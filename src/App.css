@@ -5,6 +5,37 @@
   text-align: center;
 }
 
+.flex-1.overflow-y-auto::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+.flex-1.overflow-y-auto {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+::-webkit-scrollbar {
+    width: 0px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar {
+    width: 0px;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;

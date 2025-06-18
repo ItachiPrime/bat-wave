@@ -17,6 +17,7 @@ const MusicPlayer = () => {
     handlePrevious,
     seekTo,
     setVolume,
+    playerLoading, // <-- add this
   } = usePlayer();
 
   if (!currentSong) {
@@ -73,27 +74,36 @@ const MusicPlayer = () => {
             size="icon" 
             onClick={handlePrevious}
             className="h-8 w-8 hover:bat-glow-blue"
+            disabled={playerLoading}
           >
             <SkipBack className="h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
           
-          <Button 
-            size="icon" 
-            onClick={togglePlay}
-            className="h-8 w-8 sm:h-10 sm:w-10 bat-glow hover:animate-glow-pulse"
-          >
-            {isPlaying ? (
-              <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
-            ) : (
-              <Play className="h-4 w-4 sm:h-5 sm:w-5" />
-            )}
-          </Button>
+          {/* Play/Pause or Spinner */}
+          {playerLoading && !isPlaying ? (
+            <div className="h-8 w-8 sm:h-10 sm:w-10 flex items-center justify-center">
+              <span className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"></span>
+            </div>
+          ) : (
+            <Button 
+              size="icon" 
+              onClick={togglePlay}
+              className="h-8 w-8 sm:h-10 sm:w-10 bat-glow hover:animate-glow-pulse z-10"
+            >
+              {isPlaying ? (
+                <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
+              ) : (
+                <Play className="h-4 w-4 sm:h-5 sm:w-5" />
+              )}
+            </Button>
+          )}
           
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={handleNext}
             className="h-8 w-8 hover:bat-glow-blue"
+            disabled={playerLoading}
           >
             <SkipForward className="h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
