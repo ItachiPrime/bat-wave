@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Trash2 } from 'lucide-react';
+import { Play, Trash2, Download } from 'lucide-react';
 import { Song } from '@/types/music';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useToast } from '@/hooks/use-toast';
