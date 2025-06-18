@@ -8,6 +8,7 @@ import SearchPage from '@/pages/SearchPage';
 import DownloadsPage from '@/pages/DownloadsPage';
 import PlaylistsPage from '@/pages/PlaylistsPage';
 import NowPlayingPage from '@/pages/NowPlayingPage';
+import Navbar from '@/components/Navbar';
 
 const Layout = () => {
   const location = useLocation();
@@ -45,17 +46,8 @@ const Layout = () => {
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
-      {/* Header */}
-      <header className="p-4 border-b border-border bg-card/50 backdrop-blur-sm">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center bat-glow">
-            <span className="text-primary-foreground font-bold text-sm">B</span>
-          </div>
-          <h1 className="text-xl font-bold font-orbitron uppercase tracking-wider text-primary">
-            BAT-MUSIC
-          </h1>
-        </div>
-      </header>
+      {/* Navbar */}
+      <Navbar />
 
       {/* Main Content */}
       <main className="flex-1 overflow-hidden">
@@ -65,52 +57,52 @@ const Layout = () => {
       {/* Music Player */}
       <MusicPlayer />
 
-      {/* Bottom Navigation */}
-      <nav className="border-t border-border bg-card/80 backdrop-blur-sm p-2">
-        <div className="flex justify-around">
+      {/* Bottom Navigation - Mobile Optimized */}
+      <nav className="border-t border-border bg-card/80 backdrop-blur-sm p-2 safe-area-padding-bottom">
+        <div className="flex justify-around max-w-md mx-auto">
           <Button
             variant={activeTab === 'search' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setActiveTab('search')}
-            className={`flex-col h-auto py-2 px-3 gap-1 font-orbitron text-xs uppercase tracking-wider ${
+            className={`flex-col h-auto py-2 px-2 sm:px-3 gap-1 font-orbitron text-xs uppercase tracking-wider min-h-[60px] ${
               activeTab === 'search' ? 'bat-glow text-primary-foreground' : 'hover:bat-glow-blue'
             }`}
           >
-            <Search className="h-5 w-5" />
-            SEARCH
+            <Search className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="text-[10px] sm:text-xs">SEARCH</span>
           </Button>
           <Button
             variant={activeTab === 'downloads' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setActiveTab('downloads')}
-            className={`flex-col h-auto py-2 px-3 gap-1 font-orbitron text-xs uppercase tracking-wider ${
+            className={`flex-col h-auto py-2 px-2 sm:px-3 gap-1 font-orbitron text-xs uppercase tracking-wider min-h-[60px] ${
               activeTab === 'downloads' ? 'bat-glow text-primary-foreground' : 'hover:bat-glow-blue'
             }`}
           >
-            <Download className="h-5 w-5" />
-            DOWNLOADS
+            <Download className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="text-[10px] sm:text-xs">DOWNLOADS</span>
           </Button>
           <Button
             variant={activeTab === 'playlists' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setActiveTab('playlists')}
-            className={`flex-col h-auto py-2 px-3 gap-1 font-orbitron text-xs uppercase tracking-wider ${
+            className={`flex-col h-auto py-2 px-2 sm:px-3 gap-1 font-orbitron text-xs uppercase tracking-wider min-h-[60px] ${
               activeTab === 'playlists' ? 'bat-glow text-primary-foreground' : 'hover:bat-glow-blue'
             }`}
           >
-            <Music className="h-5 w-5" />
-            PLAYLISTS
+            <Music className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="text-[10px] sm:text-xs">PLAYLISTS</span>
           </Button>
           <Button
             variant={activeTab === 'now-playing' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setActiveTab('now-playing')}
-            className={`flex-col h-auto py-2 px-3 gap-1 font-orbitron text-xs uppercase tracking-wider ${
+            className={`flex-col h-auto py-2 px-2 sm:px-3 gap-1 font-orbitron text-xs uppercase tracking-wider min-h-[60px] ${
               activeTab === 'now-playing' ? 'bat-glow text-primary-foreground' : 'hover:bat-glow-blue'
             }`}
           >
-            <Play className="h-5 w-5" />
-            NOW PLAYING
+            <Play className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="text-[10px] sm:text-xs">NOW PLAYING</span>
           </Button>
         </div>
       </nav>

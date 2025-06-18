@@ -33,7 +33,7 @@ const MusicPlayer = () => {
   };
 
   return (
-    <div className="bg-card border-t border-border p-4 scan-line">
+    <div className="bg-card border-t border-border p-3 sm:p-4 scan-line safe-area-padding-bottom">
       {/* Progress Bar */}
       <div className="mb-3">
         <Slider
@@ -49,16 +49,16 @@ const MusicPlayer = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         {/* Song Info */}
-        <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
           <img
             src={currentSong.thumbnail}
             alt={currentSong.title}
-            className="w-12 h-12 rounded-md object-cover border border-border"
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-md object-cover border border-border flex-shrink-0"
           />
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-sm truncate font-orbitron uppercase tracking-wide">
+            <p className="font-semibold text-xs sm:text-sm truncate font-orbitron uppercase tracking-wide">
               {currentSong.title}
             </p>
             <p className="text-xs text-muted-foreground truncate font-orbitron">
@@ -68,25 +68,25 @@ const MusicPlayer = () => {
         </div>
 
         {/* Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={handlePrevious}
             className="h-8 w-8 hover:bat-glow-blue"
           >
-            <SkipBack className="h-4 w-4" />
+            <SkipBack className="h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
           
           <Button 
             size="icon" 
             onClick={togglePlay}
-            className="h-10 w-10 bat-glow hover:animate-glow-pulse"
+            className="h-8 w-8 sm:h-10 sm:w-10 bat-glow hover:animate-glow-pulse"
           >
             {isPlaying ? (
-              <Pause className="h-5 w-5" />
+              <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
             ) : (
-              <Play className="h-5 w-5" />
+              <Play className="h-4 w-4 sm:h-5 sm:w-5" />
             )}
           </Button>
           
@@ -96,12 +96,12 @@ const MusicPlayer = () => {
             onClick={handleNext}
             className="h-8 w-8 hover:bat-glow-blue"
           >
-            <SkipForward className="h-4 w-4" />
+            <SkipForward className="h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
         </div>
 
-        {/* Volume */}
-        <div className="flex items-center gap-2 min-w-0 w-24">
+        {/* Volume - Hidden on mobile */}
+        <div className="hidden sm:flex items-center gap-2 min-w-0 w-20">
           <Volume2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <Slider
             value={[volume]}

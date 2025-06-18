@@ -25,25 +25,25 @@ const SearchPage = () => {
       const mockResults: Song[] = [
         {
           id: '1',
-          title: 'Sample Song 1 - ' + query,
-          channel: 'Sample Artist',
-          duration: '3:45',
+          title: 'The Dark Knight Rises Theme - ' + query,
+          channel: 'Hans Zimmer',
+          duration: '4:32',
           thumbnail: 'https://picsum.photos/320/180?random=1',
           isDownloaded: false,
         },
         {
           id: '2',
-          title: 'Sample Song 2 - ' + query,
-          channel: 'Another Artist',
-          duration: '4:12',
+          title: 'Batman Begins Soundtrack - ' + query,
+          channel: 'Christopher Nolan',
+          duration: '3:45',
           thumbnail: 'https://picsum.photos/320/180?random=2',
           isDownloaded: false,
         },
         {
           id: '3',
-          title: 'Sample Song 3 - ' + query,
-          channel: 'Music Channel',
-          duration: '2:58',
+          title: 'Gotham City Anthem - ' + query,
+          channel: 'Epic Music',
+          duration: '5:12',
           thumbnail: 'https://picsum.photos/320/180?random=3',
           isDownloaded: false,
         },
@@ -85,9 +85,9 @@ const SearchPage = () => {
   };
 
   return (
-    <div className="flex-1 p-4 space-y-4 overflow-auto">
-      <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-4 bat-gradient rounded-lg p-4 border border-border">
-        <h1 className="text-2xl font-bold mb-4 font-orbitron uppercase tracking-wider text-primary">
+    <div className="flex-1 p-3 sm:p-4 space-y-4 overflow-auto mobile-full-height">
+      <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-4 bat-gradient rounded-lg p-3 sm:p-4 border border-border">
+        <h1 className="text-xl sm:text-2xl font-bold mb-4 font-orbitron uppercase tracking-wider text-primary responsive-text-2xl">
           SEARCH MUSIC
         </h1>
         <div className="flex gap-2">
@@ -96,12 +96,12 @@ const SearchPage = () => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            className="flex-1 bg-bat-grey border-border focus:border-primary focus:bat-glow font-orbitron"
+            className="flex-1 bg-bat-grey border-border focus:border-primary focus:bat-glow font-orbitron text-sm"
           />
           <Button 
             onClick={handleSearch} 
             disabled={loading}
-            className="bat-glow hover:animate-glow-pulse font-orbitron uppercase tracking-wider"
+            className="bat-glow hover:animate-glow-pulse font-orbitron uppercase tracking-wider px-3 sm:px-4"
           >
             <Search className="h-4 w-4" />
           </Button>
@@ -111,19 +111,19 @@ const SearchPage = () => {
       {loading && (
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto bat-glow"></div>
-          <p className="mt-2 text-muted-foreground font-orbitron uppercase tracking-wider">SCANNING...</p>
+          <p className="mt-2 text-muted-foreground font-orbitron uppercase tracking-wider text-sm">SCANNING...</p>
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className="space-y-3 pb-4">
         {results.map((song, index) => (
           <Card key={song.id} className="bg-card border-border hover:border-primary/50 transition-all duration-300 hover:bat-glow-blue">
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex gap-3">
                 <img
                   src={song.thumbnail}
                   alt={song.title}
-                  className="w-20 h-20 rounded object-cover border border-border"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded object-cover border border-border flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-sm mb-1 truncate font-orbitron uppercase tracking-wide">
@@ -132,15 +132,15 @@ const SearchPage = () => {
                   <p className="text-xs text-muted-foreground mb-2 font-orbitron">
                     {song.channel}
                   </p>
-                  <p className="text-xs text-muted-foreground font-orbitron">
+                  <p className="text-xs text-muted-foreground font-orbitron mb-3">
                     {song.duration}
                   </p>
-                  <div className="flex gap-2 mt-3">
+                  <div className="flex gap-2 flex-wrap">
                     <Button 
                       size="sm" 
                       variant="outline" 
                       onClick={() => handlePlay(song, index)}
-                      className="border-primary/30 hover:border-primary hover:bat-glow font-orbitron uppercase text-xs"
+                      className="border-primary/30 hover:border-primary hover:bat-glow font-orbitron uppercase text-xs flex-1 sm:flex-none min-w-[80px]"
                     >
                       <Play className="h-3 w-3 mr-1" />
                       PLAY
@@ -150,7 +150,7 @@ const SearchPage = () => {
                       variant="outline" 
                       onClick={() => handleDownload(song)}
                       disabled={song.isDownloaded}
-                      className="border-primary/30 hover:border-primary hover:bat-glow font-orbitron uppercase text-xs"
+                      className="border-primary/30 hover:border-primary hover:bat-glow font-orbitron uppercase text-xs flex-1 sm:flex-none min-w-[100px]"
                     >
                       <Download className="h-3 w-3 mr-1" />
                       {song.isDownloaded ? 'DOWNLOADED' : 'DOWNLOAD'}

@@ -9,7 +9,129 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      playlist_songs: {
+        Row: {
+          created_at: string
+          id: string
+          playlist_id: string
+          position: number
+          song_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          playlist_id: string
+          position?: number
+          song_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          playlist_id?: string
+          position?: number
+          song_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_songs_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlist_songs_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playlists: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      songs: {
+        Row: {
+          channel: string
+          created_at: string
+          duration: string
+          id: string
+          thumbnail: string
+          title: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          duration: string
+          id?: string
+          thumbnail: string
+          title: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          duration?: string
+          id?: string
+          thumbnail?: string
+          title?: string
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

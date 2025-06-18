@@ -87,6 +87,10 @@
     background-image: 
       radial-gradient(circle at 20% 80%, rgba(45, 212, 191, 0.05) 0%, transparent 50%),
       radial-gradient(circle at 80% 20%, rgba(251, 191, 36, 0.05) 0%, transparent 50%);
+    /* Mobile optimization */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
   /* Batman-themed glow effects */
@@ -136,11 +140,36 @@
     0% { left: -100%; }
     100% { left: 100%; }
   }
+
+  /* Mobile-specific optimizations */
+  .safe-area-padding-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Touch-friendly buttons */
+  button {
+    touch-action: manipulation;
+  }
+
+  /* Prevent text selection on interactive elements */
+  .no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  /* Mobile viewport optimization */
+  @supports (-webkit-touch-callout: none) {
+    .mobile-full-height {
+      min-height: -webkit-fill-available;
+    }
+  }
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -149,9 +178,35 @@
 
 ::-webkit-scrollbar-thumb {
   background: hsl(var(--primary));
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary) / 0.8);
+}
+
+/* Mobile responsive text sizing */
+@media (max-width: 640px) {
+  .responsive-text-lg {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+  
+  .responsive-text-xl {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+  
+  .responsive-text-2xl {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+}
+
+/* Focus styles for accessibility */
+button:focus-visible,
+input:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
 }

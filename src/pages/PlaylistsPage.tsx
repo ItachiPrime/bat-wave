@@ -59,21 +59,22 @@ const PlaylistsPage = () => {
   };
 
   return (
-    <div className="flex-1 p-4 space-y-4 overflow-auto">
-      <div className="flex items-center justify-between bat-gradient rounded-lg p-4 border border-border">
-        <h1 className="text-2xl font-bold font-orbitron uppercase tracking-wider text-primary">
+    <div className="flex-1 p-3 sm:p-4 space-y-4 overflow-auto mobile-full-height">
+      <div className="flex items-center justify-between bat-gradient rounded-lg p-3 sm:p-4 border border-border">
+        <h1 className="text-xl sm:text-2xl font-bold font-orbitron uppercase tracking-wider text-primary responsive-text-2xl">
           PLAYLISTS
         </h1>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bat-glow hover:animate-glow-pulse font-orbitron uppercase tracking-wider">
-              <Plus className="h-4 w-4 mr-2" />
-              CREATE PLAYLIST
+            <Button className="bat-glow hover:animate-glow-pulse font-orbitron uppercase tracking-wider text-xs sm:text-sm px-3 sm:px-4">
+              <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">CREATE PLAYLIST</span>
+              <span className="sm:hidden">CREATE</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-card border-border">
+          <DialogContent className="bg-card border-border mx-4 max-w-sm sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="font-orbitron uppercase tracking-wider text-primary">
+              <DialogTitle className="font-orbitron uppercase tracking-wider text-primary text-sm sm:text-base">
                 CREATE NEW PLAYLIST
               </DialogTitle>
             </DialogHeader>
@@ -89,14 +90,14 @@ const PlaylistsPage = () => {
                 <Button 
                   variant="outline" 
                   onClick={() => setIsCreateDialogOpen(false)}
-                  className="border-border hover:border-primary font-orbitron uppercase"
+                  className="border-border hover:border-primary font-orbitron uppercase text-xs"
                 >
                   CANCEL
                 </Button>
                 <Button 
                   onClick={createPlaylist} 
                   disabled={!newPlaylistName.trim()}
-                  className="bat-glow font-orbitron uppercase"
+                  className="bat-glow font-orbitron uppercase text-xs"
                 >
                   CREATE
                 </Button>
@@ -110,19 +111,19 @@ const PlaylistsPage = () => {
         <div className="text-center py-12">
           <div className="text-muted-foreground mb-4">
             <Music className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p className="font-orbitron uppercase tracking-wider">NO PLAYLISTS YET</p>
-            <p className="text-sm font-orbitron">Create your first playlist to organize your music</p>
+            <p className="font-orbitron uppercase tracking-wider responsive-text-lg">NO PLAYLISTS YET</p>
+            <p className="text-sm font-orbitron mt-2">Create your first playlist to organize your music</p>
           </div>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 pb-4">
           {playlists.map((playlist) => (
             <Card 
               key={playlist.id} 
               className="cursor-pointer hover:shadow-md transition-all duration-300 bg-card border-border hover:border-primary/50 hover:bat-glow-blue"
             >
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg truncate font-orbitron uppercase tracking-wider">
+                <CardTitle className="text-base sm:text-lg truncate font-orbitron uppercase tracking-wider">
                   {playlist.name}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground font-orbitron">
@@ -131,12 +132,12 @@ const PlaylistsPage = () => {
               </CardHeader>
               <CardContent className="pt-0">
                 <Button 
-                  className="w-full bat-glow hover:animate-glow-pulse font-orbitron uppercase tracking-wider" 
+                  className="w-full bat-glow hover:animate-glow-pulse font-orbitron uppercase tracking-wider text-xs" 
                   variant="outline" 
                   onClick={() => handlePlayPlaylist(playlist)}
                   disabled={playlist.songs.length === 0}
                 >
-                  <Play className="h-4 w-4 mr-2" />
+                  <Play className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   PLAY PLAYLIST
                 </Button>
               </CardContent>
