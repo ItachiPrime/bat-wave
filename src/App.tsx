@@ -20,9 +20,8 @@ import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-
-   useEffect(() => {
+const App = () => {
+  useEffect(() => {
     const setVh = () => {
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty('--vh', `${vh}px`);
@@ -33,35 +32,37 @@ const App = () => (
     return () => window.removeEventListener('resize', setVh);
   }, []);
   
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Sonner /> {/* Sonner can remain here or be moved to main.tsx too if preferred */}
-        <BrowserRouter>
-          <Routes>
-            {/* This is the crucial change:
-              The AuthPage route MUST be placed OUTSIDE of the ProtectedRoute.
-              It should be directly under Routes.
-            */}
-            <Route path="/auth" element={<AuthPage />} /> {/* <--- MOVED THIS LINE HERE */}
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <Sonner /> {/* Sonner can remain here or be moved to main.tsx too if preferred */}
+          <BrowserRouter>
+            <Routes>
+              {/* This is the crucial change:
+                The AuthPage route MUST be placed OUTSIDE of the ProtectedRoute.
+                It should be directly under Routes.
+              */}
+              <Route path="/auth" element={<AuthPage />} /> {/* <--- MOVED THIS LINE HERE */}
 
-            {/* All main pages wrapped in layout + protection */}
-            <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-              <Route index element={<SearchPage />} />
-              {/* REMOVED: <Route path="/auth" element={<AuthPage />} /> from here */}
-              <Route path="/search" element={<SearchPage />} />
-              <Route path="/downloads" element={<DownloadsPage />} />
-              <Route path="/playlists" element={<PlaylistsPage />} />
-              <Route path="/now-playing" element={<NowPlayingPage />} />
-            </Route>
+              {/* All main pages wrapped in layout + protection */}
+              <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                <Route index element={<SearchPage />} />
+                {/* REMOVED: <Route path="/auth" element={<AuthPage />} /> from here */}
+                <Route path="/search" element={<SearchPage />} />
+                <Route path="/downloads" element={<DownloadsPage />} />
+                <Route path="/playlists" element={<PlaylistsPage />} />
+                <Route path="/now-playing" element={<NowPlayingPage />} />
+              </Route>
 
-            {/* Catch-all - Keep this at the very end */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+              {/* Catch-all - Keep this at the very end */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
