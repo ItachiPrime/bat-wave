@@ -93,7 +93,7 @@ const NowPlayingPage = () => {
       </div>
 
       {/* Progress */}
-      <div className="space-y-2 pt-52 px-2">
+      <div className="space-y-2 pt-44 px-2">
         <Slider
           value={[currentTime]}
           max={duration}
