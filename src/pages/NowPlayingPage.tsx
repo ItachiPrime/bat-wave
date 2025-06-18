@@ -40,7 +40,7 @@ const NowPlayingPage = () => {
 
   if (!currentSong) {
     return (
-      <div className="flex-1 p-3 sm:p-4 flex items-center justify-center mobile-full-height">
+      <div className="flex-1 p-3 sm:p-4 flex items-center justify-center mobile-full-height mt-8">
         <div className="text-center text-muted-foreground">
           <Play className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 opacity-50" />
           <p className="text-base sm:text-lg mb-2 font-orbitron uppercase tracking-wider responsive-text-lg">
