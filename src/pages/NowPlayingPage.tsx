@@ -76,7 +76,7 @@ const NowPlayingPage = () => {
           <img
             src={currentSong.thumbnail || fallbackThumbnail}
             alt={currentSong.title || "Unknown Title"}
-            className="w-60 h-60 sm:w-64 sm:h-64 rounded-lg object-cover shadow-lg border-2 border-primary/30 bat-glow"
+            className="w-64 h-64 rounded-lg object-cover shadow-lg border-2 border-primary/30 bat-glow"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent rounded-lg" />
         </div>
@@ -93,7 +93,7 @@ const NowPlayingPage = () => {
       </div>
 
       {/* Progress */}
-      <div className="space-y-2 pt-52">
+      <div className="space-y-2 pt-52 px-2">
         <Slider
           value={[currentTime]}
           max={duration}
@@ -162,41 +162,6 @@ const NowPlayingPage = () => {
         </Button>
       </div>
 
-      {/* Queue */}
-      {!isSingleSong && (
-        <div className="space-y-3">
-          <h3 className="font-medium font-orbitron uppercase tracking-wider text-primary text-sm sm:text-base">
-            UP NEXT
-          </h3>
-          <div className="space-y-2 max-h-48 sm:max-h-64 overflow-auto">
-            {playlist.slice(currentIndex + 1).map((song, index) => (
-              <Card
-                key={`${song.id}-${index}`}
-                className="cursor-pointer hover:bg-accent/50 bg-card border-border hover:border-primary/50 transition-all duration-300"
-                onClick={() => handleQueueSong(currentIndex + 1 + index)}
-              >
-                <CardContent className="p-3">
-                  <div className="flex gap-3">
-                    <img
-                      src={song.thumbnail || fallbackThumbnail}
-                      alt={song.title || "Untitled"}
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover border border-border flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate font-orbitron uppercase tracking-wide">
-                        {song.title || "Untitled"}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate font-orbitron">
-                        {song.channel || "Unknown Artist"}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
