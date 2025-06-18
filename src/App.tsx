@@ -16,10 +16,23 @@ import DownloadsPage from "./pages/DownloadsPage";
 import NowPlayingPage from "./pages/NowPlayingPage";
 import PlaylistsPage from "./pages/PlaylistsPage";
 import AuthPage from "./pages/AuthPage"; // Make sure AuthPage is imported
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
 const App = () => (
+
+  useEffect(() => {
+  const setVh = () => {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+  };
+
+  setVh();
+  window.addEventListener('resize', setVh);
+  return () => window.removeEventListener('resize', setVh);
+}, []);
+
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
