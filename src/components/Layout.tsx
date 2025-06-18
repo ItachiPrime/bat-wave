@@ -14,6 +14,20 @@ const Layout = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('search');
 
+  useEffect(() => {
+  const setVh = () => {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+  };
+
+  setVh();
+  window.addEventListener('resize', setVh);
+
+  return () => {
+    window.removeEventListener('resize', setVh);
+  };
+}, []);
+
   // Update active tab based on URL without causing re-renders
   useEffect(() => {
     const path = location.pathname;
@@ -44,7 +58,8 @@ const Layout = () => {
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
+    <div className="flex flex-col bg-background text-foreground overflow-hidden" style={{ height: 'calc(var(--vh) * 100)' }}>
+
       {/* Top Navbar */}
       <Navbar />
 
