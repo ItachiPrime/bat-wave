@@ -29,7 +29,7 @@ const DownloadsPage = () => {
     setDownloads(updatedDownloads);
     localStorage.setItem('downloadedSongs', JSON.stringify(updatedDownloads));
     toast({
-      title: "Song Deleted",
+      title: "SONG DELETED",
       description: "Song has been removed from downloads.",
     });
   };
@@ -42,12 +42,17 @@ const DownloadsPage = () => {
 
   return (
     <div className="flex-1 p-4 space-y-4 overflow-auto">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Downloads</h1>
+      <div className="flex items-center justify-between bat-gradient rounded-lg p-4 border border-border">
+        <h1 className="text-2xl font-bold font-orbitron uppercase tracking-wider text-primary">
+          DOWNLOADS
+        </h1>
         {downloads.length > 0 && (
-          <Button onClick={playAll}>
+          <Button 
+            onClick={playAll}
+            className="bat-glow hover:animate-glow-pulse font-orbitron uppercase tracking-wider"
+          >
             <Play className="h-4 w-4 mr-2" />
-            Play All
+            PLAY ALL
           </Button>
         )}
       </div>
@@ -56,37 +61,49 @@ const DownloadsPage = () => {
         <div className="text-center py-12">
           <div className="text-muted-foreground mb-4">
             <Download className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>No downloaded songs yet</p>
-            <p className="text-sm">Search and download songs to see them here</p>
+            <p className="font-orbitron uppercase tracking-wider">NO DOWNLOADED SONGS YET</p>
+            <p className="text-sm font-orbitron">Search and download songs to see them here</p>
           </div>
         </div>
       ) : (
         <div className="space-y-3">
           {downloads.map((song, index) => (
-            <Card key={song.id}>
+            <Card key={song.id} className="bg-card border-border hover:border-primary/50 transition-all duration-300 hover:bat-glow-blue">
               <CardContent className="p-4">
                 <div className="flex gap-3">
                   <img
                     src={song.thumbnail}
                     alt={song.title}
-                    className="w-16 h-16 rounded object-cover"
+                    className="w-16 h-16 rounded object-cover border border-border"
                   />
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-sm mb-1 truncate">{song.title}</h3>
-                    <p className="text-xs text-muted-foreground mb-2">{song.channel}</p>
-                    <p className="text-xs text-muted-foreground">{song.duration}</p>
+                    <h3 className="font-medium text-sm mb-1 truncate font-orbitron uppercase tracking-wide">
+                      {song.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mb-2 font-orbitron">
+                      {song.channel}
+                    </p>
+                    <p className="text-xs text-muted-foreground font-orbitron">
+                      {song.duration}
+                    </p>
                     <div className="flex gap-2 mt-3">
-                      <Button size="sm" variant="outline" onClick={() => handlePlay(song, index)}>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => handlePlay(song, index)}
+                        className="border-primary/30 hover:border-primary hover:bat-glow font-orbitron uppercase text-xs"
+                      >
                         <Play className="h-3 w-3 mr-1" />
-                        Play
+                        PLAY
                       </Button>
                       <Button 
                         size="sm" 
                         variant="outline" 
                         onClick={() => handleDelete(song.id)}
+                        className="border-destructive/30 hover:border-destructive text-destructive hover:text-destructive font-orbitron uppercase text-xs"
                       >
                         <Trash2 className="h-3 w-3 mr-1" />
-                        Delete
+                        DELETE
                       </Button>
                     </div>
                   </div>

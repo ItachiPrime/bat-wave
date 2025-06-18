@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2 } from 'lucide-react';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { formatTime } from '@/utils/formatters';
 
@@ -12,63 +12,105 @@ const MusicPlayer = () => {
     isPlaying,
     currentTime,
     duration,
+    volume,
     togglePlay,
     handleNext,
     handlePrevious,
     seekTo,
+    setVolume,
   } = useAudioPlayer();
 
-  if (!currentSong) return null;
+  if (!currentSong) {
+    return null;
+  }
 
   const handleSeek = (value: number[]) => {
     seekTo(value[0]);
   };
 
-  return (
-    <div className="bg-card border-t p-4 space-y-3">
-      {/* Song Info */}
-      <div className="flex items-center gap-3">
-        <img
-          src={currentSong.thumbnail}
-          alt={currentSong.title}
-          className="w-12 h-12 rounded object-cover"
-        />
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm truncate">{currentSong.title}</p>
-          <p className="text-xs text-muted-foreground truncate">{currentSong.channel}</p>
-        </div>
-      </div>
+  const handleVolumeChange = (value: number[]) => {
+    setVolume(value[0]);
+  };
 
+  return (
+    <div className="bg-card border-t border-border p-4 scan-line">
       {/* Progress Bar */}
-      <div className="space-y-2">
+      <div className="mb-3">
         <Slider
           value={[currentTime]}
           max={duration}
           step={1}
           onValueChange={handleSeek}
-          className="w-full"
+          className="w-full [&_.relative]:bg-bat-grey [&_[role=slider]]:bg-primary [&_[role=slider]]:border-primary [&_[role=slider]]:bat-glow"
         />
-        <div className="flex justify-between text-xs text-muted-foreground">
+        <div className="flex justify-between text-xs text-muted-foreground mt-1 font-orbitron">
           <span>{formatTime(currentTime)}</span>
           <span>{formatTime(duration)}</span>
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex items-center justify-center gap-4">
-        <Button variant="ghost" size="icon" onClick={handlePrevious}>
-          <SkipBack className="h-5 w-5" />
-        </Button>
-        <Button size="icon" onClick={togglePlay}>
-          {isPlaying ? (
-            <Pause className="h-5 w-5" />
-          ) : (
-            <Play className="h-5 w-5" />
-          )}
-        </Button>
-        <Button variant="ghost" size="icon" onClick={handleNext}>
-          <SkipForward className="h-5 w-5" />
-        </Button>
+      <div className="flex items-center gap-4">
+        {/* Song Info */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <img
+            src={currentSong.thumbnail}
+            alt={currentSong.title}
+            className="w-12 h-12 rounded-md object-cover border border-border"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-sm truncate font-orbitron uppercase tracking-wide">
+              {currentSong.title}
+            </p>
+            <p className="text-xs text-muted-foreground truncate font-orbitron">
+              {currentSong.channel}
+            </p>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handlePrevious}
+            className="h-8 w-8 hover:bat-glow-blue"
+          >
+            <SkipBack className="h-4 w-4" />
+          </Button>
+          
+          <Button 
+            size="icon" 
+            onClick={togglePlay}
+            className="h-10 w-10 bat-glow hover:animate-glow-pulse"
+          >
+            {isPlaying ? (
+              <Pause className="h-5 w-5" />
+            ) : (
+              <Play className="h-5 w-5" />
+            )}
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleNext}
+            className="h-8 w-8 hover:bat-glow-blue"
+          >
+            <SkipForward className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Volume */}
+        <div className="flex items-center gap-2 min-w-0 w-24">
+          <Volume2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <Slider
+            value={[volume]}
+            max={1}
+            step={0.1}
+            onValueChange={handleVolumeChange}
+            className="flex-1 [&_.relative]:bg-bat-grey [&_[role=slider]]:bg-primary [&_[role=slider]]:border-primary"
+          />
+        </div>
       </div>
     </div>
   );

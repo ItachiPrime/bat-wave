@@ -42,7 +42,7 @@ const PlaylistsPage = () => {
     setIsCreateDialogOpen(false);
     
     toast({
-      title: "Playlist Created",
+      title: "PLAYLIST CREATED",
       description: `"${newPlaylistName}" has been created.`,
     });
   };
@@ -52,7 +52,7 @@ const PlaylistsPage = () => {
       playPlaylist(playlist.songs, 0);
     } else {
       toast({
-        title: "Empty Playlist",
+        title: "EMPTY PLAYLIST",
         description: "This playlist doesn't have any songs yet.",
       });
     }
@@ -60,18 +60,22 @@ const PlaylistsPage = () => {
 
   return (
     <div className="flex-1 p-4 space-y-4 overflow-auto">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Playlists</h1>
+      <div className="flex items-center justify-between bat-gradient rounded-lg p-4 border border-border">
+        <h1 className="text-2xl font-bold font-orbitron uppercase tracking-wider text-primary">
+          PLAYLISTS
+        </h1>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="bat-glow hover:animate-glow-pulse font-orbitron uppercase tracking-wider">
               <Plus className="h-4 w-4 mr-2" />
-              Create Playlist
+              CREATE PLAYLIST
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="bg-card border-border">
             <DialogHeader>
-              <DialogTitle>Create New Playlist</DialogTitle>
+              <DialogTitle className="font-orbitron uppercase tracking-wider text-primary">
+                CREATE NEW PLAYLIST
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <Input
@@ -79,13 +83,22 @@ const PlaylistsPage = () => {
                 value={newPlaylistName}
                 onChange={(e) => setNewPlaylistName(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && createPlaylist()}
+                className="bg-bat-grey border-border focus:border-primary focus:bat-glow font-orbitron"
               />
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                  Cancel
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsCreateDialogOpen(false)}
+                  className="border-border hover:border-primary font-orbitron uppercase"
+                >
+                  CANCEL
                 </Button>
-                <Button onClick={createPlaylist} disabled={!newPlaylistName.trim()}>
-                  Create
+                <Button 
+                  onClick={createPlaylist} 
+                  disabled={!newPlaylistName.trim()}
+                  className="bat-glow font-orbitron uppercase"
+                >
+                  CREATE
                 </Button>
               </div>
             </div>
@@ -97,29 +110,34 @@ const PlaylistsPage = () => {
         <div className="text-center py-12">
           <div className="text-muted-foreground mb-4">
             <Music className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>No playlists yet</p>
-            <p className="text-sm">Create your first playlist to organize your music</p>
+            <p className="font-orbitron uppercase tracking-wider">NO PLAYLISTS YET</p>
+            <p className="text-sm font-orbitron">Create your first playlist to organize your music</p>
           </div>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {playlists.map((playlist) => (
-            <Card key={playlist.id} className="cursor-pointer hover:shadow-md transition-shadow">
+            <Card 
+              key={playlist.id} 
+              className="cursor-pointer hover:shadow-md transition-all duration-300 bg-card border-border hover:border-primary/50 hover:bat-glow-blue"
+            >
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg truncate">{playlist.name}</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  {playlist.songs.length} song{playlist.songs.length !== 1 ? 's' : ''}
+                <CardTitle className="text-lg truncate font-orbitron uppercase tracking-wider">
+                  {playlist.name}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground font-orbitron">
+                  {playlist.songs.length} SONG{playlist.songs.length !== 1 ? 'S' : ''}
                 </p>
               </CardHeader>
               <CardContent className="pt-0">
                 <Button 
-                  className="w-full" 
+                  className="w-full bat-glow hover:animate-glow-pulse font-orbitron uppercase tracking-wider" 
                   variant="outline" 
                   onClick={() => handlePlayPlaylist(playlist)}
                   disabled={playlist.songs.length === 0}
                 >
                   <Play className="h-4 w-4 mr-2" />
-                  Play Playlist
+                  PLAY PLAYLIST
                 </Button>
               </CardContent>
             </Card>
