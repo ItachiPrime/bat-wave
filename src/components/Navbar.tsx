@@ -36,7 +36,7 @@ const Navbar = () => {
             <span className="text-primary-foreground font-bold text-sm font-orbitron">B</span>
           </div>
           <h1 className="text-xl font-bold font-orbitron uppercase tracking-wider text-primary">
-            BAT-MUSIC
+            BATWAVE
           </h1>
         </div>
 

@@ -53,17 +53,28 @@ const Layout = () => {
         <Outlet />
       </main>
 
-      {/* Music Player Always at Bottom */}
-      <MusicPlayer />
+      {/* Music Player Always at Bottom, except on Now Playing page */}
+      {location.pathname !== '/now-playing' && <MusicPlayer />}
 
       {/* Bottom Navigation for Mobile */}
       <nav className="border-t border-border bg-card/80 backdrop-blur-sm p-2 safe-area-padding-bottom">
         <div className="flex justify-around max-w-md mx-auto">
           <Button
+            variant={activeTab === 'now-playing' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => handleTabChange('now-playing')}
+            className={`flex-col h-auto py-2 px-2 sm:px-2 gap-1 font-orbitron text-xs uppercase tracking-wider min-h-[60px] w-full ${
+              activeTab === 'now-playing' ? 'bat-glow text-primary-foreground' : 'hover:bat-glow-blue'
+            }`}
+          >
+            <Play className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="text-[10px] sm:text-xs">NOW PLAYING</span>
+          </Button>
+          <Button
             variant={activeTab === 'search' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => handleTabChange('search')}
-            className={`flex-col h-auto py-2 px-2 sm:px-3 gap-1 font-orbitron text-xs uppercase tracking-wider min-h-[60px] ${
+            className={`flex-col h-auto py-2 px-2 sm:px-2 gap-1 font-orbitron text-xs uppercase tracking-wider min-h-[60px] w-full ${
               activeTab === 'search' ? 'bat-glow text-primary-foreground' : 'hover:bat-glow-blue'
             }`}
           >
@@ -74,7 +85,7 @@ const Layout = () => {
             variant={activeTab === 'downloads' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => handleTabChange('downloads')}
-            className={`flex-col h-auto py-2 px-2 sm:px-3 gap-1 font-orbitron text-xs uppercase tracking-wider min-h-[60px] ${
+            className={`flex-col h-auto py-2 px-2 sm:px-2 gap-1 font-orbitron text-xs uppercase tracking-wider min-h-[60px] w-full ${
               activeTab === 'downloads' ? 'bat-glow text-primary-foreground' : 'hover:bat-glow-blue'
             }`}
           >
@@ -85,23 +96,12 @@ const Layout = () => {
             variant={activeTab === 'playlists' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => handleTabChange('playlists')}
-            className={`flex-col h-auto py-2 px-2 sm:px-3 gap-1 font-orbitron text-xs uppercase tracking-wider min-h-[60px] ${
+            className={`flex-col h-auto py-2 px-2 sm:px-3 gap-1 font-orbitron text-xs uppercase tracking-wider min-h-[60px] w-full ${
               activeTab === 'playlists' ? 'bat-glow text-primary-foreground' : 'hover:bat-glow-blue'
             }`}
           >
             <Music className="h-4 w-4 sm:h-5 sm:w-5" />
             <span className="text-[10px] sm:text-xs">PLAYLISTS</span>
-          </Button>
-          <Button
-            variant={activeTab === 'now-playing' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => handleTabChange('now-playing')}
-            className={`flex-col h-auto py-2 px-2 sm:px-3 gap-1 font-orbitron text-xs uppercase tracking-wider min-h-[60px] ${
-              activeTab === 'now-playing' ? 'bat-glow text-primary-foreground' : 'hover:bat-glow-blue'
-            }`}
-          >
-            <Play className="h-4 w-4 sm:h-5 sm:w-5" />
-            <span className="text-[10px] sm:text-xs">NOW PLAYING</span>
           </Button>
         </div>
       </nav>

@@ -71,12 +71,12 @@ const NowPlayingPage = () => {
   return (
     <div className="flex-1 p-3 sm:p-4 space-y-4 sm:space-y-6 overflow-auto mobile-full-height">
       {/* Album Art */}
-      <div className="flex justify-center">
+      <div className="flex justify-center pt-16">
         <div className="relative">
           <img
             src={currentSong.thumbnail || fallbackThumbnail}
             alt={currentSong.title || "Unknown Title"}
-            className="w-48 h-48 sm:w-64 sm:h-64 rounded-lg object-cover shadow-lg border-2 border-primary/30 bat-glow"
+            className="w-60 h-60 sm:w-64 sm:h-64 rounded-lg object-cover shadow-lg border-2 border-primary/30 bat-glow"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent rounded-lg" />
         </div>
@@ -93,7 +93,7 @@ const NowPlayingPage = () => {
       </div>
 
       {/* Progress */}
-      <div className="space-y-2">
+      <div className="space-y-2 pt-52">
         <Slider
           value={[currentTime]}
           max={duration}
@@ -160,18 +160,6 @@ const NowPlayingPage = () => {
         >
           <Repeat className="h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
-      </div>
-
-      {/* Volume Control */}
-      <div className="flex items-center gap-3">
-        <Volume2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-        <Slider
-          value={[volume]}
-          max={1}
-          step={0.1}
-          onValueChange={handleVolumeChange}
-          className="flex-1 [&_.relative]:bg-bat-grey [&_[role=slider]]:bg-primary [&_[role=slider]]:border-primary"
-        />
       </div>
 
       {/* Queue */}
