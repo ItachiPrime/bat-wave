@@ -1,7 +1,8 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, SkipBack, SkipForward, Volume2 } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward } from "lucide-react";
 import { usePlayer } from "@/hooks/usePlayerContext";
+import { useMusicControls } from "@/hooks/useMusicControls";
 
 const MusicPlayer = () => {
   const {
@@ -9,21 +10,26 @@ const MusicPlayer = () => {
     isPlaying,
     currentTime,
     duration,
-    volume,
     togglePlay,
     handleNext,
     handlePrevious,
-    setVolume,
     playerLoading,
   } = usePlayer();
+
+  useMusicControls(
+    currentSong,
+    isPlaying,
+    togglePlay,
+    () => {
+      if (isPlaying) togglePlay();
+    },
+    handleNext,
+    handlePrevious
+  );
 
   if (!currentSong) {
     return null;
   }
-
-  const handleVolumeChange = (value: number[]) => {
-    setVolume(value[0]);
-  };
 
   // Calculate progress percentage
   const progressPercent = duration
@@ -98,20 +104,6 @@ const MusicPlayer = () => {
           >
             <SkipForward className="h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
-        </div>
-
-        {/* Volume - Hidden on mobile */}
-        <div className="hidden sm:flex items-center gap-2 min-w-0 w-20">
-          <Volume2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.1}
-            value={volume}
-            onChange={(e) => handleVolumeChange([parseFloat(e.target.value)])}
-            className="flex-1 accent-primary"
-          />
         </div>
       </div>
     </div>
