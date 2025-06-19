@@ -7,7 +7,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -45,12 +45,13 @@ const Navbar = () => {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="relative h-10 w-10 rounded-full bat-border hover:bat-glow-blue p-0"
+              className="relative h-10 w-10 p-0 rounded-full hover:bg-transparent focus:bg-transparent focus:ring-0 hover:ring-0 active:bg-transparent active:ring-0 ring-0 ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
             >
-              <Avatar className="h-10 w-10 border-2 border-primary/30">
-                <AvatarFallback className="bg-bat-grey text-primary font-orbitron font-bold text-sm">
-                  {user?.email ? getInitials(user.email) : 'BM'}
-                </AvatarFallback>
+              <Avatar className="h-10 w-10 border-2 border-primary rounded-full">
+                <AvatarImage
+                  src="/public/bat.png"
+                  alt='User Avatar'
+                />
               </Avatar>
             </Button>
           </DropdownMenuTrigger>

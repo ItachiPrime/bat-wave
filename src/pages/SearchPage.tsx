@@ -8,10 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { usePlayer } from "@/hooks/usePlayerContext";
 import { supabase } from "@/integrations/supabase/client";
 
-import { Capacitor } from "@capacitor/core";
-import { Directory, Filesystem } from "@capacitor/filesystem";
-import { Http } from "@capacitor/http";
-
 const SearchPage: React.FC = () => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Song[]>([]);
@@ -143,35 +139,47 @@ const SearchPage: React.FC = () => {
     setProcessingId(song.id);
 
     const rapidUrl = `https://youtube-mp36.p.rapidapi.com/dl?id=${song.id}`;
+    const filename = `${sanitizeFileName(song.title)}.mp3`;
+    const storagePath = `shared/${filename}`; // Use a shared folder for all users
 
     try {
-      const r = await fetch(rapidUrl, {
-        method: "GET",
-        headers: {
-          "x-rapidapi-key": import.meta.env.VITE_RAPIDAPI_KEY,
-          "x-rapidapi-host": "youtube-mp36.p.rapidapi.com",
-        },
-      });
-      const j = await r.json();
-      if (!j.link) throw new Error(j.msg || "No download link");
-
-      const blobResp = await fetch(j.link);
-      const blob = await blobResp.blob();
-
-      const filename = `${sanitizeFileName(song.title)}.mp3`;
-      const storagePath = `${userId}/${filename}`;
-
-      // Upload audio file
-      const { error: uploadErr } = await supabase.storage
+      // 1. Check if file already exists in storage
+      const { data: fileList, error: listErr } = await supabase
+        .storage
         .from("music")
-        .upload(storagePath, blob, {
-          contentType: "audio/mpeg",
-          upsert: true,
+        .list("shared", { search: filename });
+
+      let fileExists = false;
+      if (!listErr && fileList && fileList.some((f: any) => f.name === filename)) {
+        fileExists = true;
+      }
+
+      // 2. If not exists, upload
+      if (!fileExists) {
+        const r = await fetch(rapidUrl, {
+          method: "GET",
+          headers: {
+            "x-rapidapi-key": import.meta.env.VITE_RAPIDAPI_KEY,
+            "x-rapidapi-host": "youtube-mp36.p.rapidapi.com",
+          },
         });
+        const j = await r.json();
+        if (!j.link) throw new Error(j.msg || "No download link");
 
-      if (uploadErr) throw uploadErr;
+        const blobResp = await fetch(j.link);
+        const blob = await blobResp.blob();
 
-      // --- Upload thumbnail image ---
+        const { error: uploadErr } = await supabase.storage
+          .from("music")
+          .upload(storagePath, blob, {
+            contentType: "audio/mpeg",
+            upsert: true,
+          });
+
+        if (uploadErr) throw uploadErr;
+      }
+
+      // 3. Always upload thumbnail for user (optional: can also share thumbnails)
       let thumbnailStoragePath: string | null = null;
       if (song.thumbnail) {
         try {
@@ -180,23 +188,34 @@ const SearchPage: React.FC = () => {
           const thumbExt =
             song.thumbnail.split(".").pop()?.split("?")[0] || "jpg";
           const thumbFilename = `${sanitizeFileName(song.title)}.${thumbExt}`;
-          thumbnailStoragePath = `${userId}/thumbnails/${thumbFilename}`;
-          const { error: thumbErr } = await supabase.storage
+          thumbnailStoragePath = `shared/thumbnails/${thumbFilename}`;
+          // Check if thumbnail exists
+          const { data: thumbList, error: thumbListErr } = await supabase
+            .storage
             .from("music")
-            .upload(thumbnailStoragePath, thumbBlob, {
-              contentType: thumbBlob.type || "image/jpeg",
-              upsert: true,
-            });
-          if (thumbErr) {
-            console.warn("Thumbnail upload failed:", thumbErr.message);
-            thumbnailStoragePath = null;
+            .list("shared/thumbnails", { search: thumbFilename });
+          let thumbExists = false;
+          if (!thumbListErr && thumbList && thumbList.some((f: any) => f.name === thumbFilename)) {
+            thumbExists = true;
+          }
+          if (!thumbExists) {
+            const { error: thumbErr } = await supabase.storage
+              .from("music")
+              .upload(thumbnailStoragePath, thumbBlob, {
+                contentType: thumbBlob.type || "image/jpeg",
+                upsert: true,
+              });
+            if (thumbErr) {
+              console.warn("Thumbnail upload failed:", thumbErr.message);
+              thumbnailStoragePath = null;
+            }
           }
         } catch (e) {
           console.warn("Thumbnail fetch/upload failed:", e);
         }
       }
 
-      // --- Save song metadata to Supabase table ---
+      // 4. Add/Upsert song row for this user
       await supabase.from("songs").upsert([
         {
           id: song.id,
@@ -205,7 +224,7 @@ const SearchPage: React.FC = () => {
           channel: song.channel,
           duration: song.duration,
           thumbnail: thumbnailStoragePath, // Save storage path
-          audio_path: storagePath,         // Save audio storage path
+          audio_path: storagePath, // Save audio storage path
           created_at: new Date().toISOString(),
         },
       ]);
@@ -269,7 +288,11 @@ const SearchPage: React.FC = () => {
         playbackUrl = j.link;
 
         // Play instantly with available info
-        playSingleSong({ ...song, audioUrl: playbackUrl, duration: song.duration });
+        playSingleSong({
+          ...song,
+          audioUrl: playbackUrl,
+          duration: song.duration,
+        });
 
         // Upload in background (as before)
         (async () => {
@@ -278,12 +301,10 @@ const SearchPage: React.FC = () => {
             const blob = await blobResp.blob();
 
             // Upload audio file to Supabase
-            await supabase.storage
-              .from("music")
-              .upload(path, blob, {
-                contentType: "audio/mpeg",
-                upsert: true,
-              });
+            await supabase.storage.from("music").upload(path, blob, {
+              contentType: "audio/mpeg",
+              upsert: true,
+            });
 
             // Upload thumbnail if needed
             let thumbnailStoragePath: string | null = null;
@@ -293,7 +314,9 @@ const SearchPage: React.FC = () => {
                 const thumbBlob = await thumbResp.blob();
                 const thumbExt =
                   song.thumbnail.split(".").pop()?.split("?")[0] || "jpg";
-                const thumbFilename = `${sanitizeFileName(song.title)}.${thumbExt}`;
+                const thumbFilename = `${sanitizeFileName(
+                  song.title
+                )}.${thumbExt}`;
                 thumbnailStoragePath = `${userId}/thumbnails/${thumbFilename}`;
                 await supabase.storage
                   .from("music")
@@ -323,7 +346,9 @@ const SearchPage: React.FC = () => {
 
             // Optionally update UI to show as downloaded
             setResults((prev) =>
-              prev.map((s) => (s.id === song.id ? { ...s, isDownloaded: true } : s))
+              prev.map((s) =>
+                s.id === song.id ? { ...s, isDownloaded: true } : s
+              )
             );
           } catch (err) {
             // ignore background upload errors
@@ -423,7 +448,6 @@ const SearchPage: React.FC = () => {
                       {processingId === song.id ? (
                         <span className="flex items-center justify-center">
                           <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary mr-1"></span>
-                          LOADING
                         </span>
                       ) : (
                         <>
@@ -442,7 +466,6 @@ const SearchPage: React.FC = () => {
                       {processingId === song.id ? (
                         <span className="flex items-center justify-center">
                           <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary mr-1"></span>
-                          DOWNLOADING
                         </span>
                       ) : (
                         <>

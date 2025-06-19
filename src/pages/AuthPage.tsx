@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,8 +25,11 @@ const AuthPage = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await signUp(email, password, fullName);
+    const { error } = await signUp(email, password, fullName);
     setLoading(false);
+    if (!error) {
+      navigate('/search');
+    }
   };
 
   return (
@@ -127,7 +129,7 @@ const AuthPage = () => {
                     className="w-full bat-glow hover:animate-glow-pulse font-orbitron uppercase tracking-wider"
                     disabled={loading}
                   >
-                    {loading ? 'CREATING...' : 'JOIN THE LEAGUE'}
+                    {loading ? 'CREATING...' : 'JOIN THE WAVE'}
                   </Button>
                 </form>
               </TabsContent>

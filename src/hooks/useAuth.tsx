@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,13 +41,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
+    // Remove emailRedirectTo and confirmation, just sign up and log in
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName,
         }
@@ -61,14 +58,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: error.message,
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "ACCOUNT CREATED",
-        description: "Please check your email to verify your account.",
-      });
+      return { error };
     }
 
-    return { error };
+    // If sign up is successful, immediately sign in the user
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      toast({
+        title: "LOGIN ERROR",
+        description: signInError.message,
+        variant: "destructive",
+      });
+      return { error: signInError };
+    }
+
+    toast({
+      title: "ACCOUNT CREATED",
+      description: "Welcome to BAT-MUSIC.",
+    });
+
+    return { error: null };
   };
 
   const signIn = async (email: string, password: string) => {

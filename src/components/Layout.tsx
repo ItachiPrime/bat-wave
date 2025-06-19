@@ -83,7 +83,7 @@ const Layout = () => {
             }`}
           >
             <Play className="h-4 w-4 sm:h-5 sm:w-5" />
-            <span className="text-[10px] sm:text-xs">NOW PLAYING</span>
+            <span className="text-[10px] sm:text-xs">PLAYING</span>
           </Button>
           <Button
             variant={activeTab === 'search' ? 'default' : 'ghost'}
