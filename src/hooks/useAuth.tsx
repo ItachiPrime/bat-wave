@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } else {
       toast({
         title: "WELCOME BACK",
-        description: "Successfully logged in to BAT-MUSIC.",
+        description: "Successfully logged in to BATWAVE.",
       });
     }
 
