@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Play, Trash2, Download } from 'lucide-react';
-import { Song } from '@/types/music';
-import { usePlayer } from '@/hooks/usePlayerContext';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Play, Trash2, Download } from "lucide-react";
+import { Song } from "@/types/music";
+import { usePlayer } from "@/hooks/usePlayerContext";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
+const COMMON_AUDIO_FOLDER = "songs";
+const COMMON_THUMBNAIL_FOLDER = "thumbnails";
 const fallbackThumbnail = "/fallback-thumbnail.png";
 
 const DownloadsPage = () => {
@@ -23,7 +25,9 @@ const DownloadsPage = () => {
       const { data, error } = await supabase.auth.getUser();
       if (isMounted) setUserId(data?.user?.id || null);
     })();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Fetch downloads when userId is available
@@ -35,10 +39,10 @@ const DownloadsPage = () => {
       setLoading(true);
 
       const { data: songsData, error: songsError } = await supabase
-        .from('songs')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .from("songs")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
 
       if (songsError) {
         toast({
@@ -58,7 +62,7 @@ const DownloadsPage = () => {
 
           if (song.audio_path) {
             const { data: audioSigned } = await supabase.storage
-              .from('music')
+              .from("music")
               .createSignedUrl(song.audio_path, 3600);
             if (audioSigned?.signedUrl) {
               audioUrl = audioSigned.signedUrl;
@@ -71,7 +75,7 @@ const DownloadsPage = () => {
 
           if (song.thumbnail) {
             const { data: thumbSigned } = await supabase.storage
-              .from('music')
+              .from("music")
               .createSignedUrl(song.thumbnail, 3600);
             if (thumbSigned?.signedUrl) {
               thumbUrl = thumbSigned.signedUrl;
@@ -96,7 +100,9 @@ const DownloadsPage = () => {
     };
 
     fetchDownloads();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [userId, toast]);
 
   // Play a single song from the downloads list, but as part of the playlist
@@ -134,24 +140,12 @@ const DownloadsPage = () => {
     setLoading(true);
 
     try {
-      // Remove audio file
-      if (song.audioUrl && song.audioUrl.includes('/music/')) {
-        // Get the path from the DB
-        const { data: songRow } = await supabase
-          .from("songs")
-          .select("audio_path,thumbnail")
-          .eq("id", songId)
-          .single();
-        if (songRow?.audio_path) {
-          await supabase.storage.from("music").remove([songRow.audio_path]);
-        }
-        if (songRow?.thumbnail) {
-          await supabase.storage.from("music").remove([songRow.thumbnail]);
-        }
-      }
-
-      // Remove from songs table
-      await supabase.from("songs").delete().eq("id", songId);
+      // Remove only from songs table for this user
+      await supabase
+        .from("songs")
+        .delete()
+        .eq("id", songId)
+        .eq("user_id", userId);
 
       // Remove from UI
       setDownloads((prev) => prev.filter((s) => s.id !== songId));
@@ -178,7 +172,7 @@ const DownloadsPage = () => {
           DOWNLOADS
         </h1>
         {downloads.length > 0 && (
-          <Button 
+          <Button
             onClick={playAll}
             className="bat-glow hover:animate-glow-pulse font-orbitron uppercase tracking-wider text-xs sm:text-sm px-3 sm:px-4"
           >
@@ -199,14 +193,21 @@ const DownloadsPage = () => {
         <div className="text-center py-12">
           <div className="text-muted-foreground mb-4">
             <Download className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p className="font-orbitron uppercase tracking-wider responsive-text-lg">NO DOWNLOADED SONGS YET</p>
-            <p className="text-sm font-orbitron mt-2">Search and download songs to see them here</p>
+            <p className="font-orbitron uppercase tracking-wider responsive-text-lg">
+              NO DOWNLOADED SONGS YET
+            </p>
+            <p className="text-sm font-orbitron mt-2">
+              Search and download songs to see them here
+            </p>
           </div>
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto space-y-3 pb-4">
           {downloads.map((song, index) => (
-            <Card key={song.id} className="bg-card border-border hover:border-primary/50 transition-all duration-300 hover:bat-glow-blue">
+            <Card
+              key={song.id}
+              className="bg-card border-border hover:border-primary/50 transition-all duration-300 hover:bat-glow-blue"
+            >
               <CardContent className="p-3 sm:p-4">
                 <div className="flex gap-3">
                   <img
@@ -225,18 +226,18 @@ const DownloadsPage = () => {
                       {song.duration}
                     </p>
                     <div className="flex gap-2 flex-wrap">
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
+                      <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => handlePlay(song, index)}
                         className="border-primary/30 hover:border-primary hover:bat-glow font-orbitron uppercase text-xs flex-1 sm:flex-none min-w-[70px]"
                       >
                         <Play className="h-3 w-3 mr-1" />
                         PLAY
                       </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
+                      <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => handleDelete(song.id)}
                         className="border-destructive/30 hover:border-destructive text-destructive hover:text-destructive font-orbitron uppercase text-xs flex-1 sm:flex-none min-w-[80px]"
                         disabled={loading}
