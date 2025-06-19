@@ -14,6 +14,7 @@ const SearchPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null); // For per-song loading
+  const [uploadingId, setUploadingId] = useState<string | null>(null); // <-- set uploading state
   const { toast } = useToast();
   const { playSingleSong } = usePlayer();
 
@@ -137,6 +138,7 @@ const SearchPage: React.FC = () => {
     }
 
     setProcessingId(song.id);
+    setUploadingId(song.id); // <-- set uploading state
 
     const rapidUrl = `https://youtube-mp36.p.rapidapi.com/dl?id=${song.id}`;
     const filename = `${sanitizeFileName(song.title)}.mp3`;
@@ -245,6 +247,7 @@ const SearchPage: React.FC = () => {
       console.log("Download error:", err);
     } finally {
       setProcessingId(null);
+      setUploadingId(null); // <-- clear uploading state
     }
   };
 
@@ -297,6 +300,7 @@ const SearchPage: React.FC = () => {
         // Upload in background (as before)
         (async () => {
           try {
+            setUploadingId(song.id); // <-- set uploading state
             const blobResp = await fetch(j.link);
             const blob = await blobResp.blob();
 
@@ -352,6 +356,8 @@ const SearchPage: React.FC = () => {
             );
           } catch (err) {
             // ignore background upload errors
+          } finally {
+            setUploadingId(null); // <-- clear uploading state
           }
         })();
 
@@ -396,7 +402,6 @@ const SearchPage: React.FC = () => {
             {loading ? (
               <span className="flex items-center">
                 <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></span>
-                SEARCHING
               </span>
             ) : (
               <Search className="h-4 w-4" />
@@ -460,12 +465,13 @@ const SearchPage: React.FC = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => handleDownload(song)}
-                      disabled={song.isDownloaded || processingId === song.id}
+                      disabled={song.isDownloaded || processingId === song.id || uploadingId === song.id}
                       className="border-primary/30 hover:border-primary hover:bat-glow font-orbitron uppercase text-xs flex-1 sm:flex-none min-w-[100px]"
                     >
-                      {processingId === song.id ? (
+                      {(uploadingId === song.id) ? (
                         <span className="flex items-center justify-center">
                           <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary mr-1"></span>
+                          UPLOADING
                         </span>
                       ) : (
                         <>

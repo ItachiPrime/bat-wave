@@ -26,7 +26,7 @@ const DownloadsPage = () => {
   useEffect(() => {
     const fetchDownloads = async () => {
       if (!userId) return;
-      setLoading(true); // Start loading
+      setLoading(true);
 
       const { data: songsData, error: songsError } = await supabase
         .from('songs')
@@ -36,23 +36,27 @@ const DownloadsPage = () => {
 
       if (songsError) {
         console.error('Failed to fetch songs:', songsError.message);
-        setLoading(false); // End loading
+        setLoading(false);
         return;
       }
 
       const songsWithUrls = await Promise.all(
         (songsData ?? []).map(async (song) => {
-          // Sanitize filename
-          const baseFilename = song.title
-            .replace(/[/\\?%*:|"<>]/g, "")
-            .replace(/[^\w\s]/gi, "_")
-            .replace(/\s+/g, "_");
-
-          // Audio file path
-          const audioPath = `${userId}/${baseFilename}.mp3`;
-          const { data: audioSigned, error: audioErr } = await supabase.storage
-            .from('music')
-            .createSignedUrl(audioPath, 3600);
+          // Use audio_path from DB (shared path)
+          let audioUrl = "";
+          if (song.audio_path) {
+            const { data: audioSigned, error: audioErr } = await supabase.storage
+              .from('music')
+              .createSignedUrl(song.audio_path, 3600);
+            if (!audioErr && audioSigned?.signedUrl) {
+              audioUrl = audioSigned.signedUrl;
+            } else {
+              console.error('Failed to create signed URL:', audioErr?.message);
+              return null;
+            }
+          } else {
+            return null;
+          }
 
           // Use thumbnail path from DB (may be null/undefined)
           let thumbSignedUrl = "";
@@ -65,18 +69,13 @@ const DownloadsPage = () => {
             }
           }
 
-          if (audioErr || !audioSigned?.signedUrl) {
-            console.error('Failed to create signed URL:', audioErr?.message);
-            return null;
-          }
-
           return {
             id: song.id,
             title: song.title,
             channel: song.channel,
             duration: song.duration,
-            thumbnail: thumbSignedUrl || fallbackThumbnail, // fallback
-            audioUrl: audioSigned.signedUrl,
+            thumbnail: thumbSignedUrl || fallbackThumbnail,
+            audioUrl,
             isDownloaded: true,
           };
         })
@@ -84,7 +83,7 @@ const DownloadsPage = () => {
 
       const validSongs = songsWithUrls.filter(Boolean) as Song[];
       setDownloads(validSongs);
-      setLoading(false); // End loading
+      setLoading(false);
     };
 
     fetchDownloads();
