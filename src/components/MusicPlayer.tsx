@@ -1,9 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
 import { Play, Pause, SkipBack, SkipForward, Volume2 } from 'lucide-react';
 import { usePlayer } from '@/hooks/usePlayerContext';
-import { formatTime } from '@/utils/formatters';
 
 const MusicPlayer = () => {
   const {
@@ -15,49 +13,41 @@ const MusicPlayer = () => {
     togglePlay,
     handleNext,
     handlePrevious,
-    seekTo,
     setVolume,
-    playerLoading, // <-- add this
+    playerLoading,
   } = usePlayer();
 
   if (!currentSong) {
     return null;
   }
 
-  const handleSeek = (value: number[]) => {
-    seekTo(value[0]);
-  };
-
   const handleVolumeChange = (value: number[]) => {
     setVolume(value[0]);
   };
 
+  // Calculate progress percentage
+  const progressPercent = duration ? Math.min((currentTime / duration) * 100, 100) : 0;
+
   return (
-    <div className="bg-card border-t border-border p-3 sm:p-4 scan-line safe-area-padding-bottom">
-      {/* Progress Bar */}
-      <div className="mb-3">
-        <Slider
-          value={[currentTime]}
-          max={duration}
-          step={1}
-          onValueChange={handleSeek}
-          className="w-full [&_.relative]:bg-bat-grey [&_[role=slider]]:bg-primary [&_[role=slider]]:border-primary [&_[role=slider]]:bat-glow"
+    <div className="bg-card border-t border-border p-3 sm:p-4 scan-line safe-area-padding-bottom relative">
+      {/* Minimal Progress Bar */}
+      <div className="absolute left-0 top-0 w-full h-1 bg-bat-grey/40">
+        <div
+          className="h-1 bg-primary transition-all"
+          style={{ width: `${progressPercent}%` }}
         />
-        <div className="flex justify-between text-xs text-muted-foreground mt-1 font-orbitron">
-          <span>{formatTime(currentTime)}</span>
-          <span>{formatTime(duration)}</span>
-        </div>
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4">
         {/* Song Info */}
         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
           <img
+            key={currentSong.id}
             src={currentSong.thumbnail}
             alt={currentSong.title}
             className="w-10 h-10 sm:w-12 sm:h-12 rounded-md object-cover border border-border flex-shrink-0"
           />
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1" key={currentSong.id}>
             <p className="font-semibold text-xs sm:text-sm truncate font-orbitron uppercase tracking-wide">
               {currentSong.title}
             </p>
@@ -73,7 +63,7 @@ const MusicPlayer = () => {
             variant="ghost" 
             size="icon" 
             onClick={handlePrevious}
-            className="h-8 w-8 hover:bat-glow-blue"
+            className="h-8 w-8 hover:bg-muted active:bg-muted focus:bg-muted data-[state=active]:bg-muted z-10"
             disabled={playerLoading}
           >
             <SkipBack className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -88,7 +78,7 @@ const MusicPlayer = () => {
             <Button 
               size="icon" 
               onClick={togglePlay}
-              className="h-8 w-8 sm:h-10 sm:w-10 bat-glow hover:animate-glow-pulse z-10"
+              className="h-8 w-8 sm:h-10 sm:w-10 bat-glow hover:animate-glow-pulse z-10 active:bg-transparent focus:bg-transparent data-[state=active]:bg-transparent"
             >
               {isPlaying ? (
                 <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -102,7 +92,7 @@ const MusicPlayer = () => {
             variant="ghost" 
             size="icon" 
             onClick={handleNext}
-            className="h-8 w-8 hover:bat-glow-blue"
+            className="h-8 w-8 hover:bg-muted active:bg-muted focus:bg-muted data-[state=active]:bg-muted z-10"
             disabled={playerLoading}
           >
             <SkipForward className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -112,12 +102,14 @@ const MusicPlayer = () => {
         {/* Volume - Hidden on mobile */}
         <div className="hidden sm:flex items-center gap-2 min-w-0 w-20">
           <Volume2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          <Slider
-            value={[volume]}
+          <input
+            type="range"
+            min={0}
             max={1}
             step={0.1}
-            onValueChange={handleVolumeChange}
-            className="flex-1 [&_.relative]:bg-bat-grey [&_[role=slider]]:bg-primary [&_[role=slider]]:border-primary"
+            value={volume}
+            onChange={e => handleVolumeChange([parseFloat(e.target.value)])}
+            className="flex-1 accent-primary"
           />
         </div>
       </div>

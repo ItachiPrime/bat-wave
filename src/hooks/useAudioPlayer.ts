@@ -22,6 +22,7 @@ export const useAudioPlayer = () => {
     useState<PlayerState>(initialPlayerState);
   const [playerLoading, setPlayerLoading] = useState(false);
   const howlRef = useRef<Howl | null>(null);
+  const nextHowlRef = useRef<Howl | null>(null); // <-- Add this
   const timeUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
@@ -67,36 +68,42 @@ export const useAudioPlayer = () => {
         html5: true,
         volume: playerState.volume,
         onload: () => {
-          // Audio is loaded and ready to play
-          setPlayerState(prev => ({
+          setPlayerState((prev) => ({
             ...prev,
             duration: howlRef.current?.duration() || 0,
           }));
-          setPlayerLoading(false); // <-- Enable play button as soon as loaded
+          setPlayerLoading(false);
           if (playOnLoad) {
             howlRef.current?.play();
           }
+          // Preload next song if in a playlist
+          if (!stateRef.current.isSingleSong && stateRef.current.playlist.length > 0) {
+            preloadNextSong(stateRef.current.playlist, stateRef.current.currentIndex);
+          }
         },
         onplay: () => {
-          setPlayerState(prev => ({ ...prev, isPlaying: true }));
+          setPlayerState((prev) => ({ ...prev, isPlaying: true }));
           // setPlayerLoading(false); // Already set in onload
           // Start time update interval if needed
-          if (timeUpdateIntervalRef.current) clearInterval(timeUpdateIntervalRef.current);
+          if (timeUpdateIntervalRef.current)
+            clearInterval(timeUpdateIntervalRef.current);
           timeUpdateIntervalRef.current = setInterval(() => {
-            setPlayerState(prev => ({
+            setPlayerState((prev) => ({
               ...prev,
-              currentTime: howlRef.current?.seek() as number || 0,
+              currentTime: (howlRef.current?.seek() as number) || 0,
             }));
           }, 500);
         },
         onpause: () => {
-          setPlayerState(prev => ({ ...prev, isPlaying: false }));
-          if (timeUpdateIntervalRef.current) clearInterval(timeUpdateIntervalRef.current);
+          setPlayerState((prev) => ({ ...prev, isPlaying: false }));
+          if (timeUpdateIntervalRef.current)
+            clearInterval(timeUpdateIntervalRef.current);
         },
         onend: () => {
-          setPlayerState(prev => ({ ...prev, isPlaying: false }));
-          if (timeUpdateIntervalRef.current) clearInterval(timeUpdateIntervalRef.current);
-          setSongEndedSignal(sig => sig + 1);
+          setPlayerState((prev) => ({ ...prev, isPlaying: false }));
+          if (timeUpdateIntervalRef.current)
+            clearInterval(timeUpdateIntervalRef.current);
+          setSongEndedSignal((sig) => sig + 1);
         },
         onloaderror: (id, error) => {
           setPlayerLoading(false);
@@ -116,7 +123,7 @@ export const useAudioPlayer = () => {
         },
       });
 
-      setPlayerState(prev => ({
+      setPlayerState((prev) => ({
         ...prev,
         currentSong: song,
         isPlaying: false,
@@ -129,7 +136,8 @@ export const useAudioPlayer = () => {
 
   const play = useCallback(() => {
     // If there's a current song and it's not playing, or if it's playing but paused, then play.
-    if (stateRef.current.currentSong) { // Ensure there's a song to play
+    if (stateRef.current.currentSong) {
+      // Ensure there's a song to play
       if (howlRef.current && !stateRef.current.isPlaying) {
         howlRef.current.play();
       } else if (!howlRef.current) {
@@ -140,7 +148,7 @@ export const useAudioPlayer = () => {
         console.log("Already playing. No action needed for play().");
       }
     } else {
-        console.warn("Attempted to play, but no current song is set.");
+      console.warn("Attempted to play, but no current song is set.");
     }
   }, [loadSongForPlayback]); // Dependency on loadSongForPlayback is needed
 
@@ -165,8 +173,8 @@ export const useAudioPlayer = () => {
 
     // Handle repeat one for single song or current song in a playlist
     if (repeat === "one" && stateRef.current.currentSong) {
-      howlRef.current?.seek(0);
-      play(); // Replay the current song
+      // Instead of seek(0), reload and play again
+      loadSongForPlayback(stateRef.current.currentSong, true);
       return;
     }
 
@@ -188,9 +196,13 @@ export const useAudioPlayer = () => {
     let nextIndex;
     if (shuffle) {
       // Pick a random index, ensuring it's not the same as current if possible for larger playlists
-      do {
-        nextIndex = Math.floor(Math.random() * playlist.length);
-      } while (playlist.length > 1 && nextIndex === currentIndex); // Avoid playing same song twice in a row if more than 1 song
+      if (playlist.length > 1) {
+        do {
+          nextIndex = Math.floor(Math.random() * playlist.length);
+        } while (nextIndex === currentIndex);
+      } else {
+        nextIndex = 0;
+      }
     } else {
       nextIndex = currentIndex + 1;
     }
@@ -200,7 +212,15 @@ export const useAudioPlayer = () => {
         nextIndex = 0; // Loop back to the beginning
       } else {
         // End of playlist, not repeating
-        setPlayerState((prev) => ({ ...prev, isPlaying: false, currentSong: null, currentIndex: -1, currentTime: 0, duration: 0, playlist: [] }));
+        setPlayerState((prev) => ({
+          ...prev,
+          isPlaying: false,
+          currentSong: null,
+          currentIndex: -1,
+          currentTime: 0,
+          duration: 0,
+          playlist: [],
+        }));
         howlRef.current?.stop(); // Ensure Howl also stops
         howlRef.current = null; // Clear Howl instance
         return;
@@ -208,16 +228,70 @@ export const useAudioPlayer = () => {
     }
 
     const nextSong = playlist[nextIndex];
-    // Immediately update player state with the new song before loading it
     setPlayerState((prev) => ({
       ...prev,
       currentIndex: nextIndex,
       currentSong: nextSong,
-      currentTime: 0, // Reset current time for the new song
-      duration: 0, // Duration will be set by onload
-      isPlaying: false, // will be set to true by onplay
+      currentTime: 0,
+      duration: howlRef.current?.duration() || 0,
+      isPlaying: true,
     }));
-    loadSongForPlayback(nextSong, true);
+
+    // Use preloaded Howl if available
+    if (nextHowlRef.current) {
+      if (howlRef.current) {
+        howlRef.current.unload();
+      }
+      howlRef.current = nextHowlRef.current;
+      nextHowlRef.current = null;
+
+      // Attach event listeners to the new Howl instance
+      howlRef.current.on('end', () => {
+        setSongEndedSignal((s) => s + 1);
+      });
+      howlRef.current.on('play', () => {
+        setPlayerState((prev) => ({
+          ...prev,
+          isPlaying: true,
+          duration: howlRef.current?.duration() || 0,
+          currentTime: 0,
+        }));
+        // Start interval for seekbar
+        if (timeUpdateIntervalRef.current) {
+          clearInterval(timeUpdateIntervalRef.current);
+        }
+        timeUpdateIntervalRef.current = setInterval(() => {
+          setPlayerState((prev) => ({
+            ...prev,
+            currentTime: howlRef.current?.seek() as number || 0,
+          }));
+        }, 500);
+      });
+      howlRef.current.on('pause', () => {
+        setPlayerState((prev) => ({
+          ...prev,
+          isPlaying: false,
+        }));
+        if (timeUpdateIntervalRef.current) {
+          clearInterval(timeUpdateIntervalRef.current);
+        }
+      });
+
+      // Update state immediately for UI
+      setPlayerState((prev) => ({
+        ...prev,
+        currentIndex: nextIndex,
+        currentSong: nextSong,
+        currentTime: 0,
+        duration: howlRef.current?.duration() || 0,
+        isPlaying: true,
+      }));
+
+      howlRef.current.play();
+      preloadNextSong(playlist, nextIndex);
+    } else {
+      loadSongForPlayback(nextSong, true);
+    }
   }, [play, loadSongForPlayback]); // Dependency on loadSongForPlayback is crucial here
 
   const handlePrevious = useCallback(() => {
@@ -259,17 +333,18 @@ export const useAudioPlayer = () => {
         currentIndex: 0,
         isSingleSong: true,
         currentTime: 0,
-        duration: song.duration ? (
-          typeof song.duration === "number"
+        duration: song.duration
+          ? typeof song.duration === "number"
             ? song.duration
             : (() => {
                 // Parse "m:ss" or "h:mm:ss" to seconds
                 const parts = song.duration.split(":").map(Number);
-                if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+                if (parts.length === 3)
+                  return parts[0] * 3600 + parts[1] * 60 + parts[2];
                 if (parts.length === 2) return parts[0] * 60 + parts[1];
                 return 0;
               })()
-        ) : 0,
+          : 0,
         isPlaying: false,
         repeat: "none",
         shuffle: false,
@@ -296,7 +371,12 @@ export const useAudioPlayer = () => {
         Math.max(0, startIndex),
         songs.length - 1
       );
-      console.log("▶️ playPlaylist CALLED for:", songs[effectiveStartIndex]?.title, "at index", effectiveStartIndex);
+      console.log(
+        "▶️ playPlaylist CALLED for:",
+        songs[effectiveStartIndex]?.title,
+        "at index",
+        effectiveStartIndex
+      );
 
       // Immediately set currentSong and related properties in one go
       setPlayerState((prev) => ({
@@ -341,9 +421,17 @@ export const useAudioPlayer = () => {
     setPlayerState((prev) => ({
       ...prev,
       repeat:
-        prev.repeat === "none" ? "all" : prev.repeat === "all" ? "one" : "none",
+        prev.repeat === "none" ? "one" : prev.repeat === "one" ? "all" : "none",
     }));
   }, []);
+
+  // React to song end signal and call handleNext
+  useEffect(() => {
+    if (songEndedSignal > 0) {
+      handleNext();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [songEndedSignal]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -354,8 +442,33 @@ export const useAudioPlayer = () => {
       if (howlRef.current) {
         howlRef.current.unload();
       }
+      if (nextHowlRef.current) {
+        nextHowlRef.current.unload();
+      }
     };
   }, []);
+
+  const preloadNextSong = useCallback((playlist: Song[], currentIndex: number) => {
+    if (!playlist || playlist.length === 0) return;
+    const nextIndex = currentIndex + 1;
+    if (nextIndex >= playlist.length) return;
+    const nextSong = playlist[nextIndex];
+    const audioUrl = nextSong.audioUrl || nextSong.url;
+    if (!audioUrl) return;
+
+    // Clean up previous preloaded Howl
+    if (nextHowlRef.current) {
+      nextHowlRef.current.unload();
+      nextHowlRef.current = null;
+    }
+
+    nextHowlRef.current = new Howl({
+      src: [audioUrl],
+      html5: true,
+      volume: playerState.volume,
+      preload: true,
+    });
+  }, [playerState.volume]);
 
   return {
     ...playerState,

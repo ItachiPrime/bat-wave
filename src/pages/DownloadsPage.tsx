@@ -7,9 +7,11 @@ import { usePlayer } from '@/hooks/usePlayerContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
+const fallbackThumbnail = "/fallback-thumbnail.png"; // Add this line
+
 const DownloadsPage = () => {
   const [downloads, setDownloads] = useState<Song[]>([]);
-  const [loading, setLoading] = useState(false); // Add this
+  const [loading, setLoading] = useState(true); // Start as loading
   const { playPlaylist } = usePlayer();
   const { toast } = useToast();
   const [userId, setUserId] = useState<string | null>(null);
@@ -73,7 +75,7 @@ const DownloadsPage = () => {
             title: song.title,
             channel: song.channel,
             duration: song.duration,
-            thumbnail: thumbSignedUrl || "", // fallback to empty if not found
+            thumbnail: thumbSignedUrl || fallbackThumbnail, // fallback
             audioUrl: audioSigned.signedUrl,
             isDownloaded: true,
           };
@@ -88,29 +90,92 @@ const DownloadsPage = () => {
     fetchDownloads();
   }, [userId]);
 
+  // Play a single song from the downloads list, but as part of the playlist
   const handlePlay = (song: Song, index: number) => {
+    if (!downloads[index]?.audioUrl) {
+      toast({
+        title: "Playback Error",
+        description: "Audio URL missing for this song.",
+        variant: "destructive",
+      });
+      return;
+    }
     playPlaylist(downloads, index);
   };
 
-  const handleDelete = (songId: string) => {
-    const updatedDownloads = downloads.filter(song => song.id !== songId);
-    setDownloads(updatedDownloads);
-    localStorage.setItem('downloadedSongs', JSON.stringify(updatedDownloads));
-    toast({
-      title: "SONG DELETED",
-      description: "Song has been removed from downloads.",
-    });
+  // Play all songs in the downloads list as a playlist
+  const playAll = () => {
+    if (downloads.length > 0 && downloads[0].audioUrl) {
+      playPlaylist(downloads, 0);
+    } else {
+      toast({
+        title: "Playback Error",
+        description: "No valid songs to play.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const playAll = () => {
-    if (downloads.length > 0) {
-      playPlaylist(downloads, 0);
+  // Delete song from Supabase storage and table
+  const handleDelete = async (songId: string) => {
+    if (loading) return; // Prevent double loading
+    const song = downloads.find((s) => s.id === songId);
+    if (!song || !userId) return;
+
+    setLoading(true);
+
+    try {
+      // Sanitize filename
+      const baseFilename = song.title
+        .replace(/[/\\?%*:|"<>]/g, "")
+        .replace(/[^\w\s]/gi, "_")
+        .replace(/\s+/g, "_");
+      const audioPath = `${userId}/${baseFilename}.mp3`;
+
+      // Delete audio file
+      const { error: audioDelErr } = await supabase.storage
+        .from("music")
+        .remove([audioPath]);
+
+      // Delete thumbnail if present
+      if (song.thumbnail) {
+        // song.thumbnail is a signed URL, but in DB it's stored as a path
+        // Try to get the path from the DB
+        const { data: songRow } = await supabase
+          .from("songs")
+          .select("thumbnail")
+          .eq("id", songId)
+          .single();
+        if (songRow?.thumbnail) {
+          await supabase.storage.from("music").remove([songRow.thumbnail]);
+        }
+      }
+
+      // Delete from songs table
+      await supabase.from("songs").delete().eq("id", songId);
+
+      // Remove from UI
+      const updatedDownloads = downloads.filter((s) => s.id !== songId);
+      setDownloads(updatedDownloads);
+
+      toast({
+        title: "SONG DELETED",
+        description: "Song has been removed from downloads.",
+      });
+    } catch (err: any) {
+      toast({
+        title: "DELETE ERROR",
+        description: err.message || "Failed to delete song.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex-1 p-3 sm:p-4 space-y-4 overflow-auto mobile-full-height">
-      <div className="flex items-center justify-between bat-gradient rounded-lg p-3 sm:p-4 border border-border">
+    <div className="flex flex-col h-full px-4 pt-4">
+      <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-4 bat-gradient rounded-lg p-3 sm:p-4 border border-border mb-4 flex justify-between items-center">
         <h1 className="text-xl sm:text-2xl font-bold font-orbitron uppercase tracking-wider text-primary responsive-text-2xl">
           DOWNLOADS
         </h1>
@@ -141,13 +206,13 @@ const DownloadsPage = () => {
           </div>
         </div>
       ) : (
-        <div className="space-y-3 pb-4">
+        <div className="flex-1 overflow-y-auto space-y-3 pb-4">
           {downloads.map((song, index) => (
             <Card key={song.id} className="bg-card border-border hover:border-primary/50 transition-all duration-300 hover:bat-glow-blue">
               <CardContent className="p-3 sm:p-4">
                 <div className="flex gap-3">
                   <img
-                    src={song.thumbnail}
+                    src={song.thumbnail || fallbackThumbnail}
                     alt={song.title}
                     className="w-14 h-14 sm:w-16 sm:h-16 rounded object-cover border border-border flex-shrink-0"
                   />
@@ -176,6 +241,7 @@ const DownloadsPage = () => {
                         variant="outline" 
                         onClick={() => handleDelete(song.id)}
                         className="border-destructive/30 hover:border-destructive text-destructive hover:text-destructive font-orbitron uppercase text-xs flex-1 sm:flex-none min-w-[80px]"
+                        disabled={loading}
                       >
                         <Trash2 className="h-3 w-3 mr-1" />
                         DELETE

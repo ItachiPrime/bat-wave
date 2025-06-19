@@ -98,9 +98,13 @@
     box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
   }
 
-  .bat-glow-blue {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-  }
+  .hover\:text-accent-foreground:hover {
+    color: var(--primary);
+ }
+ 
+ .hover\:bg-transparent:hover {
+    background-color: var(--primary);
+}
 
   .bat-border {
     border: 1px solid rgba(251, 191, 36, 0.2);
@@ -169,7 +173,7 @@
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 0px;
 }
 
 ::-webkit-scrollbar-track {

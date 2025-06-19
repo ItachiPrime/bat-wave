@@ -36,6 +36,7 @@ const NowPlayingPage = () => {
     toggleShuffle,
     toggleRepeat,
     playPlaylist,
+    playerLoading, // <-- Add this
   } = usePlayer();
 
   if (!currentSong) {
@@ -58,14 +59,6 @@ const NowPlayingPage = () => {
     seekTo(value[0]);
   };
 
-  const handleVolumeChange = (value: number[]) => {
-    setVolume(value[0]);
-  };
-
-  const handleQueueSong = (index: number) => {
-    playPlaylist(playlist, index);
-  };
-
   const isSingleSong = playlist.length <= 1;
 
   return (
@@ -74,6 +67,7 @@ const NowPlayingPage = () => {
       <div className="flex justify-center pt-16">
         <div className="relative">
           <img
+            key={currentSong.id} // <-- Add this line
             src={currentSong.thumbnail || fallbackThumbnail}
             alt={currentSong.title || "Unknown Title"}
             className="w-64 h-64 rounded-lg object-cover shadow-lg border-2 border-primary/30 bat-glow"
@@ -113,8 +107,8 @@ const NowPlayingPage = () => {
           variant="ghost"
           size="icon"
           onClick={toggleShuffle}
-          className={`h-8 w-8 sm:h-10 sm:w-10 ${
-            shuffle ? "text-primary bat-glow" : "hover:bat-glow-blue"
+          className={`hover:bg-transparent h-8 w-8 sm:h-10 sm:w-10 ${
+            shuffle ? "text-primary hover:text-primary" : "hover:bg-transparent"
           }`}
         >
           <Shuffle className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -124,28 +118,35 @@ const NowPlayingPage = () => {
           variant="ghost"
           size="icon"
           onClick={handlePrevious}
-          className="hover:bat-glow-blue h-8 w-8 sm:h-10 sm:w-10"
+          className="hover:bg-muted active:bg-muted focus:bg-muted data-[state=active]:bg-muted h-8 w-8 sm:h-10 sm:w-10"
         >
           <SkipBack className="h-5 w-5 sm:h-6 sm:w-6" />
         </Button>
 
-        <Button
-          size="icon"
-          className="h-12 w-12 sm:h-14 sm:w-14 bat-glow hover:animate-glow-pulse"
-          onClick={togglePlay}
-        >
-          {isPlaying ? (
-            <Pause className="h-6 w-6 sm:h-7 sm:w-7" />
-          ) : (
-            <Play className="h-6 w-6 sm:h-7 sm:w-7" />
-          )}
-        </Button>
+        {/* Play/Pause or Spinner */}
+        {playerLoading && !isPlaying ? (
+          <div className="h-12 w-12 sm:h-14 sm:w-14 flex items-center justify-center">
+            <span className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></span>
+          </div>
+        ) : (
+          <Button
+            size="icon"
+            className="h-12 w-12 sm:h-14 sm:w-14 bat-glow hover:animate-glow-pulse"
+            onClick={togglePlay}
+          >
+            {isPlaying ? (
+              <Pause className="h-6 w-6 sm:h-7 sm:w-7" />
+            ) : (
+              <Play className="h-6 w-6 sm:h-7 sm:w-7" />
+            )}
+          </Button>
+        )}
 
         <Button
           variant="ghost"
           size="icon"
           onClick={handleNext}
-          className="hover:bat-glow-blue h-8 w-8 sm:h-10 sm:w-10"
+          className="hover:bg-muted active:bg-muted focus:bg-muted data-[state=active]:bg-muted h-8 w-8 sm:h-10 sm:w-10"
         >
           <SkipForward className="h-5 w-5 sm:h-6 sm:w-6" />
         </Button>
@@ -154,14 +155,27 @@ const NowPlayingPage = () => {
           variant="ghost"
           size="icon"
           onClick={toggleRepeat}
-          className={`h-8 w-8 sm:h-10 sm:w-10 ${
-            repeat !== "none" ? "text-primary bat-glow" : "hover:bat-glow-blue"
-          }`}
+          className={`hover:bg-transparent h-8 w-8 sm:h-10 sm:w-10 relative
+    ${
+      repeat === "one"
+        ? "text-primary hover:text-primary"
+        : repeat === "all"
+        ? "text-primary hover:text-primary"
+        : ""
+    }
+  `}
         >
           <Repeat className="h-4 w-4 sm:h-5 sm:w-5" />
+          {repeat === "one" && (
+            <span
+              className="absolute bottom-0 right-0.5 text-[0.7em] font-bold text-primary"
+              style={{ pointerEvents: "none" }}
+            >
+              1
+            </span>
+          )}
         </Button>
       </div>
-
     </div>
   );
 };

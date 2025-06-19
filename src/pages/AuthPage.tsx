@@ -38,7 +38,7 @@ const AuthPage = () => {
             <span className="text-primary-foreground font-bold text-2xl font-orbitron">B</span>
           </div>
           <h1 className="text-3xl font-bold font-orbitron uppercase tracking-wider text-primary mb-2">
-            BAT-MUSIC
+            BATWAVE
           </h1>
           <p className="text-muted-foreground font-orbitron text-sm">
             Enter the Dark Knight's music sanctuary

@@ -246,7 +246,7 @@ const SearchPage: React.FC = () => {
     const path = `${userId}/${filename}`;
 
     // Try to get signed URL for audio file in Supabase
-    let { data: signedData, error: signErr } = await supabase.storage
+    const { data: signedData, error: signErr } = await supabase.storage
       .from("music")
       .createSignedUrl(path, 3600);
 
@@ -349,8 +349,8 @@ const SearchPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full p-3 sm:p-4">
-      <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-4 bat-gradient rounded-lg p-3 sm:p-4 border border-border mb-3">
+    <div className="flex flex-col h-full px-4 pt-4">
+      <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-4 bat-gradient rounded-lg p-3 sm:p-4 border border-border mb-4">
         <h1 className="text-xl sm:text-2xl font-bold mb-4 font-orbitron uppercase tracking-wider text-primary responsive-text-2xl">
           SEARCH MUSIC
         </h1>
@@ -447,7 +447,7 @@ const SearchPage: React.FC = () => {
                       ) : (
                         <>
                           <Download className="h-3 w-3 mr-1" />
-                          {song.isDownloaded ? "DOWNLOADED" : "DOWNLOAD"}
+                          {song.isDownloaded ? "DOWNLOAD" : "DOWNLOAD"}
                         </>
                       )}
                     </Button>
