@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -8,11 +7,13 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, ArrowUpToLine, ArrowUp } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useUploadManager } from "@/context/UploadManagerContext";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
+  const { uploading, progress, currentFile } = useUploadManager();
 
   const handleSignOut = async () => {
     await signOut();
@@ -40,6 +41,43 @@ const Navbar = () => {
           </h1>
         </div>
 
+        {/* Upload Progress Overlay */}
+        {uploading && (
+          <div className="flex items-center ml-24">
+            <div className="relative flex items-center justify-center">
+              <svg className="w-8 h-8" viewBox="0 0 40 40">
+                {/* Background circle */}
+                <circle
+                  cx="20"
+                  cy="20"
+                  r="16"
+                  stroke="#e5e7eb"
+                  strokeWidth="2"
+                  fill="none"
+                />
+                {/* Progress circle */}
+                <circle
+                  cx="20"
+                  cy="20"
+                  r="16"
+                  stroke="#facc15" // Tailwind yellow-400
+                  strokeWidth="3"
+                  fill="none"
+                  strokeDasharray={2 * Math.PI * 16}
+                  strokeDashoffset={
+                    2 * Math.PI * 16 * (1 - progress / 100)
+                  }
+                  strokeLinecap="round"
+                  style={{ transition: 'stroke-dashoffset 0.3s' }}
+                />
+              </svg>
+              <span className="absolute w-8 h-8 flex items-center justify-center">
+                <ArrowUp className="text-yellow-400 w-5 h-5" />
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Profile Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -49,7 +87,7 @@ const Navbar = () => {
             >
               <Avatar className="h-10 w-10 border-2 border-primary rounded-full">
                 <AvatarImage
-                  src="/public/bat.png"
+                  src="/bat.png"
                   alt='User Avatar'
                 />
               </Avatar>

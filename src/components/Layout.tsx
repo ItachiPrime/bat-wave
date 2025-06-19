@@ -3,10 +3,6 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Download, Music, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MusicPlayer from '@/components/MusicPlayer';
-import SearchPage from '@/pages/SearchPage';
-import DownloadsPage from '@/pages/DownloadsPage';
-import PlaylistsPage from '@/pages/PlaylistsPage';
-import NowPlayingPage from '@/pages/NowPlayingPage';
 import Navbar from '@/components/Navbar';
 
 const Layout = () => {
@@ -28,25 +24,10 @@ const Layout = () => {
   };
 }, []);
 
-  // Update active tab based on URL without causing re-renders
-  useEffect(() => {
-    const path = location.pathname;
-    let newTab = 'search';
-    
-    if (path.includes('downloads')) newTab = 'downloads';
-    else if (path.includes('playlists')) newTab = 'playlists';
-    else if (path.includes('now-playing')) newTab = 'now-playing';
-    else if (path.includes('search') || path === '/') newTab = 'search';
-    
-    if (newTab !== activeTab) {
-      setActiveTab(newTab);
-    }
-  }, [location.pathname, activeTab]);
-
   const handleTabChange = (tab: string) => {
     if (tab !== activeTab) {
       setActiveTab(tab);
-      navigate(`/${tab === 'search' ? '' : tab}`, { replace: true });
+      navigate(tab === 'search' ? '/' : `/${tab}`, { replace: true });
     }
   };
 
@@ -56,6 +37,20 @@ const Layout = () => {
     { key: 'playlists', icon: Music, label: 'PLAYLISTS' },
     { key: 'now-playing', icon: Play, label: 'NOW PLAYING' },
   ];
+
+  useEffect(() => {
+    const path = location.pathname;
+    let newTab = 'search';
+
+    if (path.startsWith('/downloads')) newTab = 'downloads';
+    else if (path.startsWith('/playlists')) newTab = 'playlists';
+    else if (path.startsWith('/now-playing')) newTab = 'now-playing';
+    else if (path === '/') newTab = 'search';
+
+    if (newTab !== activeTab) {
+      setActiveTab(newTab);
+    }
+  }, [location.pathname, activeTab]);
 
   return (
     <div className="flex flex-col bg-background text-foreground overflow-hidden" style={{ height: 'calc(var(--vh) * 100)' }}>

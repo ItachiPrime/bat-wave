@@ -8,6 +8,7 @@ export interface Song {
   url?: string;
   localPath?: string; // <-- add this
   audioUrl?: string;  // <-- optional, for future
+  audio_path?: string; // <-- add this line to match the DB
 }
 
 export interface Playlist {

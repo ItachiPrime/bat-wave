@@ -7,25 +7,31 @@ import { usePlayer } from '@/hooks/usePlayerContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-const fallbackThumbnail = "/fallback-thumbnail.png"; // Add this line
+const fallbackThumbnail = "/fallback-thumbnail.png";
 
 const DownloadsPage = () => {
   const [downloads, setDownloads] = useState<Song[]>([]);
-  const [loading, setLoading] = useState(true); // Start as loading
+  const [loading, setLoading] = useState(true);
   const { playPlaylist } = usePlayer();
   const { toast } = useToast();
   const [userId, setUserId] = useState<string | null>(null);
 
+  // Fetch user once on mount
   useEffect(() => {
+    let isMounted = true;
     (async () => {
-      const { data } = await supabase.auth.getUser();
-      setUserId(data?.user?.id || null);
+      const { data, error } = await supabase.auth.getUser();
+      if (isMounted) setUserId(data?.user?.id || null);
     })();
+    return () => { isMounted = false; };
   }, []);
 
+  // Fetch downloads when userId is available
   useEffect(() => {
+    if (!userId) return;
+
+    let isMounted = true;
     const fetchDownloads = async () => {
-      if (!userId) return;
       setLoading(true);
 
       const { data: songsData, error: songsError } = await supabase
@@ -35,37 +41,40 @@ const DownloadsPage = () => {
         .order('created_at', { ascending: false });
 
       if (songsError) {
-        console.error('Failed to fetch songs:', songsError.message);
+        toast({
+          title: "Fetch Error",
+          description: songsError.message,
+          variant: "destructive",
+        });
         setLoading(false);
         return;
       }
 
+      // Get signed URLs for audio and thumbnail
       const songsWithUrls = await Promise.all(
         (songsData ?? []).map(async (song) => {
-          // Use audio_path from DB (shared path)
           let audioUrl = "";
+          let thumbUrl = fallbackThumbnail;
+
           if (song.audio_path) {
-            const { data: audioSigned, error: audioErr } = await supabase.storage
+            const { data: audioSigned } = await supabase.storage
               .from('music')
               .createSignedUrl(song.audio_path, 3600);
-            if (!audioErr && audioSigned?.signedUrl) {
+            if (audioSigned?.signedUrl) {
               audioUrl = audioSigned.signedUrl;
             } else {
-              console.error('Failed to create signed URL:', audioErr?.message);
-              return null;
+              return null; // skip if audio not available
             }
           } else {
             return null;
           }
 
-          // Use thumbnail path from DB (may be null/undefined)
-          let thumbSignedUrl = "";
           if (song.thumbnail) {
-            const { data: thumbSigned, error: thumbErr } = await supabase.storage
+            const { data: thumbSigned } = await supabase.storage
               .from('music')
               .createSignedUrl(song.thumbnail, 3600);
-            if (!thumbErr && thumbSigned?.signedUrl) {
-              thumbSignedUrl = thumbSigned.signedUrl;
+            if (thumbSigned?.signedUrl) {
+              thumbUrl = thumbSigned.signedUrl;
             }
           }
 
@@ -74,7 +83,7 @@ const DownloadsPage = () => {
             title: song.title,
             channel: song.channel,
             duration: song.duration,
-            thumbnail: thumbSignedUrl || fallbackThumbnail,
+            thumbnail: thumbUrl,
             audioUrl,
             isDownloaded: true,
           };
@@ -82,12 +91,13 @@ const DownloadsPage = () => {
       );
 
       const validSongs = songsWithUrls.filter(Boolean) as Song[];
-      setDownloads(validSongs);
+      if (isMounted) setDownloads(validSongs);
       setLoading(false);
     };
 
     fetchDownloads();
-  }, [userId]);
+    return () => { isMounted = false; };
+  }, [userId, toast]);
 
   // Play a single song from the downloads list, but as part of the playlist
   const handlePlay = (song: Song, index: number) => {
@@ -117,45 +127,34 @@ const DownloadsPage = () => {
 
   // Delete song from Supabase storage and table
   const handleDelete = async (songId: string) => {
-    if (loading) return; // Prevent double loading
+    if (loading) return;
     const song = downloads.find((s) => s.id === songId);
     if (!song || !userId) return;
 
     setLoading(true);
 
     try {
-      // Sanitize filename
-      const baseFilename = song.title
-        .replace(/[/\\?%*:|"<>]/g, "")
-        .replace(/[^\w\s]/gi, "_")
-        .replace(/\s+/g, "_");
-      const audioPath = `${userId}/${baseFilename}.mp3`;
-
-      // Delete audio file
-      const { error: audioDelErr } = await supabase.storage
-        .from("music")
-        .remove([audioPath]);
-
-      // Delete thumbnail if present
-      if (song.thumbnail) {
-        // song.thumbnail is a signed URL, but in DB it's stored as a path
-        // Try to get the path from the DB
+      // Remove audio file
+      if (song.audioUrl && song.audioUrl.includes('/music/')) {
+        // Get the path from the DB
         const { data: songRow } = await supabase
           .from("songs")
-          .select("thumbnail")
+          .select("audio_path,thumbnail")
           .eq("id", songId)
           .single();
+        if (songRow?.audio_path) {
+          await supabase.storage.from("music").remove([songRow.audio_path]);
+        }
         if (songRow?.thumbnail) {
           await supabase.storage.from("music").remove([songRow.thumbnail]);
         }
       }
 
-      // Delete from songs table
+      // Remove from songs table
       await supabase.from("songs").delete().eq("id", songId);
 
       // Remove from UI
-      const updatedDownloads = downloads.filter((s) => s.id !== songId);
-      setDownloads(updatedDownloads);
+      setDownloads((prev) => prev.filter((s) => s.id !== songId));
 
       toast({
         title: "SONG DELETED",

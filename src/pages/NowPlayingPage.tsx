@@ -62,7 +62,7 @@ const NowPlayingPage = () => {
   const isSingleSong = playlist.length <= 1;
 
   return (
-    <div className="flex-1 p-4 space-y-4 sm:space-y-6 overflow-auto mobile-full-height">
+    <div className="flex-1 px-4 pt-4 pb-8 space-y-4 sm:space-y-6 overflow-auto mobile-full-height">
       {/* Album Art */}
       <div className="flex justify-center pt-16">
         <div className="relative">
@@ -87,7 +87,7 @@ const NowPlayingPage = () => {
       </div>
 
       {/* Progress */}
-      <div className="space-y-2 pt-24 px-2">
+      <div className="space-y-2 pt-28 px-2">
         <Slider
           value={[currentTime]}
           max={duration}

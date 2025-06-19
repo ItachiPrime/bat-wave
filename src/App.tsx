@@ -1,13 +1,10 @@
-// src/App.tsx
-// (Keep all imports as they are, no changes needed there)
-
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
-
+import { AudioPlayerProvider } from "@/hooks/usePlayerContext"; // Correct path
 import Layout from "@/components/Layout";
 import NotFound from "./pages/NotFound";
 
@@ -17,6 +14,8 @@ import NowPlayingPage from "./pages/NowPlayingPage";
 import PlaylistsPage from "./pages/PlaylistsPage";
 import AuthPage from "./pages/AuthPage"; // Make sure AuthPage is imported
 import { useEffect } from "react";
+import { SearchProvider } from "@/context/SearchContext";
+import { UploadManagerProvider } from "@/context/UploadManagerContext";
 
 const queryClient = new QueryClient();
 
@@ -24,41 +23,47 @@ const App = () => {
   useEffect(() => {
     const setVh = () => {
       const vh = window.innerHeight * 0.01;
-      document.documentElement.style.setProperty('--vh', `${vh}px`);
+      document.documentElement.style.setProperty("--vh", `${vh}px`);
     };
 
     setVh();
-    window.addEventListener('resize', setVh);
-    return () => window.removeEventListener('resize', setVh);
+    window.addEventListener("resize", setVh);
+    return () => window.removeEventListener("resize", setVh);
   }, []);
-  
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <Sonner /> {/* Sonner can remain here or be moved to main.tsx too if preferred */}
-          <BrowserRouter>
-            <Routes>
-              {/* This is the crucial change:
-                The AuthPage route MUST be placed OUTSIDE of the ProtectedRoute.
-                It should be directly under Routes.
-              */}
-              <Route path="/auth" element={<AuthPage />} /> {/* <--- MOVED THIS LINE HERE */}
-
-              {/* All main pages wrapped in layout + protection */}
-              <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-                <Route index element={<SearchPage />} />
-                {/* REMOVED: <Route path="/auth" element={<AuthPage />} /> from here */}
-                <Route path="/search" element={<SearchPage />} />
-                <Route path="/downloads" element={<DownloadsPage />} />
-                <Route path="/playlists" element={<PlaylistsPage />} />
-                <Route path="/now-playing" element={<NowPlayingPage />} />
-              </Route>
-
-              {/* Catch-all - Keep this at the very end */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <AudioPlayerProvider>
+            <Sonner />
+            <SearchProvider>
+              <UploadManagerProvider>
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route
+                      element={
+                        <ProtectedRoute>
+                          <Layout />
+                        </ProtectedRoute>
+                      }
+                    >
+                      <Route index element={<SearchPage />} />
+                      <Route path="/downloads" element={<DownloadsPage />} />
+                      <Route path="/playlists" element={<PlaylistsPage />} />
+                      <Route path="/now-playing" element={<NowPlayingPage />} />
+                      <Route
+                        path="/search"
+                        element={<Navigate to="/" replace />}
+                      />
+                    </Route>
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
+              </UploadManagerProvider>
+            </SearchProvider>
+          </AudioPlayerProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>

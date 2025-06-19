@@ -3,7 +3,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
-import { AudioPlayerProvider } from '@/hooks/usePlayerContext'; // Correct path
 import { Toaster } from "@/components/ui/toaster";
 
 console.log("🔥 main.tsx script executed/re-executed. Timestamp:", new Date().toLocaleString()); // <-- ADD THIS
@@ -14,10 +13,8 @@ if (rootElement) {
   console.log("🚀 ReactDOM.createRoot().render() called. Timestamp:", new Date().toLocaleString()); // <-- ADD THIS
   root.render(
     <React.StrictMode>
-      <AudioPlayerProvider>
         <App />
         <Toaster />
-      </AudioPlayerProvider>
     </React.StrictMode>,
   );
 } else {
