@@ -44,12 +44,11 @@ const MusicPlayer = () => {
         {/* Song Info */}
         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
           <img
-            key={currentSong.id}
             src={currentSong.thumbnail}
             alt={currentSong.title}
             className="w-10 h-10 sm:w-12 sm:h-12 rounded-md object-cover border border-border flex-shrink-0"
           />
-          <div className="min-w-0 flex-1" key={currentSong.id}>
+          <div className="min-w-0 flex-1">
             <p className="font-semibold text-xs sm:text-sm truncate font-orbitron uppercase tracking-wide">
               {currentSong.title}
             </p>
