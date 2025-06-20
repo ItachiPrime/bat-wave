@@ -11,34 +11,33 @@ const MusicPlayer = () => {
     currentTime,
     duration,
     togglePlay,
+    play,
+    pause,
     handleNext,
     handlePrevious,
     playerLoading,
   } = usePlayer();
 
+  // Call the music controls hook
   useMusicControls(
     currentSong,
     isPlaying,
-    togglePlay,
-    () => {
-      if (isPlaying) togglePlay();
-    },
+    play, // Only play if not already playing
+    pause, // Only pause if currently playing
     handleNext,
     handlePrevious
   );
 
-  if (!currentSong) {
-    return null;
-  }
+  if (!currentSong) return null;
 
-  // Calculate progress percentage
+  // Progress % for top bar
   const progressPercent = duration
     ? Math.min((currentTime / duration) * 100, 100)
     : 0;
 
   return (
     <div className="bg-card border-t border-border p-3 sm:p-4 scan-line safe-area-padding-bottom relative">
-      {/* Minimal Progress Bar */}
+      {/* Progress Bar */}
       <div className="absolute left-0 top-0 w-full h-1 bg-bat-grey/40">
         <div
           className="h-1 bg-primary transition-all"
@@ -70,13 +69,12 @@ const MusicPlayer = () => {
             variant="ghost"
             size="icon"
             onClick={handlePrevious}
-            className="h-8 w-8 hover:bg-muted active:bg-muted focus:bg-muted data-[state=active]:bg-muted z-10"
+            className="h-8 w-8 hover:bg-muted active:bg-muted focus:bg-muted z-10"
             disabled={playerLoading}
           >
             <SkipBack className="h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
 
-          {/* Play/Pause or Spinner */}
           {playerLoading && !isPlaying ? (
             <div className="h-8 w-8 sm:h-10 sm:w-10 flex items-center justify-center">
               <span className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"></span>
@@ -99,7 +97,7 @@ const MusicPlayer = () => {
             variant="ghost"
             size="icon"
             onClick={handleNext}
-            className="h-8 w-8 hover:bg-muted active:bg-muted focus:bg-muted data-[state=active]:bg-muted z-10"
+            className="h-8 w-8 hover:bg-muted active:bg-muted focus:bg-muted z-10"
             disabled={playerLoading}
           >
             <SkipForward className="h-3 w-3 sm:h-4 sm:w-4" />

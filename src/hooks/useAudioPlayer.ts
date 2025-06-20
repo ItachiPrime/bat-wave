@@ -77,8 +77,14 @@ export const useAudioPlayer = () => {
             howlRef.current?.play();
           }
           // Preload next song if in a playlist
-          if (!stateRef.current.isSingleSong && stateRef.current.playlist.length > 0) {
-            preloadNextSong(stateRef.current.playlist, stateRef.current.currentIndex);
+          if (
+            !stateRef.current.isSingleSong &&
+            stateRef.current.playlist.length > 0
+          ) {
+            preloadNextSong(
+              stateRef.current.playlist,
+              stateRef.current.currentIndex
+            );
           }
         },
         onplay: () => {
@@ -135,26 +141,26 @@ export const useAudioPlayer = () => {
   );
 
   const play = useCallback(() => {
-    // If there's a current song and it's not playing, or if it's playing but paused, then play.
-    if (stateRef.current.currentSong) {
-      // Ensure there's a song to play
-      if (howlRef.current && !stateRef.current.isPlaying) {
-        howlRef.current.play();
-      } else if (!howlRef.current) {
-        // If Howl instance is null but a song is set (e.g., after initial load or cleanup), reload it and play
-        loadSongForPlayback(stateRef.current.currentSong, true);
-      } else if (howlRef.current && stateRef.current.isPlaying) {
-        // Already playing, do nothing
-        console.log("Already playing. No action needed for play().");
-      }
-    } else {
+    const song = stateRef.current.currentSong;
+
+    if (!song) {
       console.warn("Attempted to play, but no current song is set.");
+      return;
     }
-  }, [loadSongForPlayback]); // Dependency on loadSongForPlayback is needed
+
+    if (howlRef.current) {
+      howlRef.current.play(); // Always call play, even if already playing
+      setPlayerState((prev) => ({ ...prev, isPlaying: true }));
+    } else {
+      loadSongForPlayback(song, true);
+    }
+  }, [loadSongForPlayback]);
+  // Dependency on loadSongForPlayback is needed
 
   const pause = useCallback(() => {
-    if (howlRef.current && stateRef.current.isPlaying) {
-      howlRef.current.pause();
+    if (howlRef.current) {
+      howlRef.current.pause(); // Always call pause, even if already paused
+      setPlayerState((prev) => ({ ...prev, isPlaying: false }));
     }
   }, []);
 
@@ -246,10 +252,10 @@ export const useAudioPlayer = () => {
       nextHowlRef.current = null;
 
       // Attach event listeners to the new Howl instance
-      howlRef.current.on('end', () => {
+      howlRef.current.on("end", () => {
         setSongEndedSignal((s) => s + 1);
       });
-      howlRef.current.on('play', () => {
+      howlRef.current.on("play", () => {
         setPlayerState((prev) => ({
           ...prev,
           isPlaying: true,
@@ -263,11 +269,11 @@ export const useAudioPlayer = () => {
         timeUpdateIntervalRef.current = setInterval(() => {
           setPlayerState((prev) => ({
             ...prev,
-            currentTime: howlRef.current?.seek() as number || 0,
+            currentTime: (howlRef.current?.seek() as number) || 0,
           }));
         }, 500);
       });
-      howlRef.current.on('pause', () => {
+      howlRef.current.on("pause", () => {
         setPlayerState((prev) => ({
           ...prev,
           isPlaying: false,
@@ -448,27 +454,30 @@ export const useAudioPlayer = () => {
     };
   }, []);
 
-  const preloadNextSong = useCallback((playlist: Song[], currentIndex: number) => {
-    if (!playlist || playlist.length === 0) return;
-    const nextIndex = currentIndex + 1;
-    if (nextIndex >= playlist.length) return;
-    const nextSong = playlist[nextIndex];
-    const audioUrl = nextSong.audioUrl || nextSong.url;
-    if (!audioUrl) return;
+  const preloadNextSong = useCallback(
+    (playlist: Song[], currentIndex: number) => {
+      if (!playlist || playlist.length === 0) return;
+      const nextIndex = currentIndex + 1;
+      if (nextIndex >= playlist.length) return;
+      const nextSong = playlist[nextIndex];
+      const audioUrl = nextSong.audioUrl || nextSong.url;
+      if (!audioUrl) return;
 
-    // Clean up previous preloaded Howl
-    if (nextHowlRef.current) {
-      nextHowlRef.current.unload();
-      nextHowlRef.current = null;
-    }
+      // Clean up previous preloaded Howl
+      if (nextHowlRef.current) {
+        nextHowlRef.current.unload();
+        nextHowlRef.current = null;
+      }
 
-    nextHowlRef.current = new Howl({
-      src: [audioUrl],
-      html5: true,
-      volume: playerState.volume,
-      preload: true,
-    });
-  }, [playerState.volume]);
+      nextHowlRef.current = new Howl({
+        src: [audioUrl],
+        html5: true,
+        volume: playerState.volume,
+        preload: true,
+      });
+    },
+    [playerState.volume]
+  );
 
   return {
     ...playerState,
