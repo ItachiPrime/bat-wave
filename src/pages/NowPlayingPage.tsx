@@ -1,7 +1,5 @@
-import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Play,
   Pause,
@@ -9,10 +7,10 @@ import {
   SkipForward,
   Shuffle,
   Repeat,
-  Volume2,
 } from "lucide-react";
 import { usePlayer } from "@/hooks/usePlayerContext";
 import { formatTime } from "@/utils/formatters";
+import { useEffect, useRef, useState } from "react";
 
 const fallbackThumbnail = "/fallback-thumbnail.png";
 
@@ -23,21 +21,42 @@ const NowPlayingPage = () => {
     isPlaying,
     currentTime,
     duration,
-    volume,
     playlist,
-    currentIndex,
     repeat,
     shuffle,
     togglePlay,
     handleNext,
     handlePrevious,
     seekTo,
-    setVolume,
     toggleShuffle,
     toggleRepeat,
-    playPlaylist,
     playerLoading, // <-- Add this
   } = usePlayer();
+
+  const [sliderValue, setSliderValue] = useState(0);
+  const [isSeeking, setIsSeeking] = useState(false);
+
+ useEffect(() => {
+    if (!isSeeking) setSliderValue(currentTime);
+  }, [currentTime, isSeeking]);
+
+  // Reset slider on song/duration change
+  useEffect(() => {
+    setSliderValue(currentTime);
+    setIsSeeking(false);
+  }, [currentSong?.id, duration]);
+
+  // User drags the slider
+  const handleSeekChange = (value: number[]) => {
+    setSliderValue(value[0]);
+    setIsSeeking(true);
+  };
+
+  // User releases the slider (or clicks the bar)
+  const handleSeekCommit = (value: number[]) => {
+    seekTo(value[0]);
+    setIsSeeking(false);
+  };
 
   if (!currentSong) {
     return (
@@ -54,12 +73,6 @@ const NowPlayingPage = () => {
       </div>
     );
   }
-
-  const handleSeek = (value: number[]) => {
-    seekTo(value[0]);
-  };
-
-  const isSingleSong = playlist.length <= 1;
 
   return (
     <div className="flex-1 px-4 pt-4 pb-8 space-y-4 sm:space-y-6 overflow-auto mobile-full-height">
@@ -89,14 +102,15 @@ const NowPlayingPage = () => {
       {/* Progress */}
       <div className="space-y-2 pt-32 px-2">
         <Slider
-          value={[currentTime]}
+          value={[sliderValue]}
           max={duration}
           step={1}
-          onValueChange={handleSeek}
+          onValueChange={handleSeekChange}
+          onValueCommit={handleSeekCommit}
           className="w-full [&_.relative]:bg-bat-grey [&_[role=slider]]:bg-primary [&_[role=slider]]:border-primary [&_[role=slider]]:bat-glow"
         />
         <div className="flex justify-between text-sm text-muted-foreground font-orbitron">
-          <span>{formatTime(currentTime)}</span>
+          <span>{formatTime(isSeeking ? sliderValue : currentTime)}</span>
           <span>{formatTime(duration)}</span>
         </div>
       </div>

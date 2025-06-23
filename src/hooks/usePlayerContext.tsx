@@ -2,6 +2,7 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 import { Song, PlayerState, RepeatMode } from '@/types/music';
+import { useMusicControls } from "@/hooks/useMusicControls";
 
 interface AudioPlayerContextType extends PlayerState {
   play: () => void;
@@ -22,6 +23,15 @@ const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(und
 
 export const AudioPlayerProvider = ({ children }: { children: ReactNode }) => {
   const player = useAudioPlayer();
+
+  useMusicControls(
+    player.currentSong,
+    player.isPlaying,
+    player.play,
+    player.pause,
+    player.handleNext,
+    player.handlePrevious
+  );
 
   return (
     <AudioPlayerContext.Provider value={player}>

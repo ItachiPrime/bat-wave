@@ -17,7 +17,7 @@ export function useMusicControls(
 ) {
   const lastTrackRef = useRef<string>("");
 
-  // 👇 Add refs for callbacks to always have latest
+  // Use refs to always get latest callbacks
   const playRef = useRef(onPlay);
   const pauseRef = useRef(onPause);
   const nextRef = useRef(onNext);
@@ -30,46 +30,68 @@ export function useMusicControls(
     prevRef.current = onPrev;
   }, [onPlay, onPause, onNext, onPrev]);
 
-  // ✅ Set up listener ONCE on mount, but use refs for callbacks
+  // 🎯 Main handler for all control events
+  const handleControlsEvent = (info: { message?: string }) => {
+    const message = info.message;
+    console.log("🎧 handleControlsEvent received:", message);
+
+    switch (message) {
+      case "music-controls-play":
+        playRef.current?.();
+        break;
+      case "music-controls-pause":
+        pauseRef.current?.();
+        break;
+      case "music-controls-next":
+        nextRef.current?.();
+        break;
+      case "music-controls-previous":
+        prevRef.current?.();
+        break;
+      case "music-controls-destroy":
+        pauseRef.current?.();
+        break;
+      default:
+        console.warn("❓ Unhandled music control:", message);
+    }
+  };
+
+  // ✅ Setup BOTH listeners: iOS and Android 13+
   useEffect(() => {
-    const listener = CapacitorMusicControls.addListener(
-      "musicControlsAction",
-      (event) => {
-        console.log("🎧 musicControlsAction:", event.action);
-        switch (event.action) {
-          case "play":
-            playRef.current();
-            break;
-          case "pause":
-            pauseRef.current();
-            break;
-          case "next":
-            nextRef.current();
-            break;
-          case "previous":
-            prevRef.current();
-            break;
-          default:
-            console.warn("Unhandled musicControlsAction:", event.action);
-        }
+    const iosListener = CapacitorMusicControls.addListener(
+      "controlsNotification",
+      (info) => {
+        console.log("📲 iOS/Old Android control fired:", info);
+        handleControlsEvent(info);
       }
     );
 
-    return () => {
-      listener.remove(); // Clean on unmount
+    const androidListener = (event: any) => {
+      const message =
+        event?.message || event?.detail?.message || "unknown-event";
+      console.log("🤖 Android 13+ control fired:", message);
+      handleControlsEvent({ message });
     };
-  }, []); // Only run once
 
-  // 🔄 Only update/create when song changes
+    document.addEventListener("controlsNotification", androidListener);
+
+    return () => {
+      iosListener.remove();
+      document.removeEventListener("controlsNotification", androidListener);
+    };
+  }, []);
+
+  // 🆕 Create or update controls when song changes
   useEffect(() => {
     if (!currentSong) return;
 
     const trackKey = `${currentSong.title}|${currentSong.channel}|${currentSong.thumbnail}`;
+    if (lastTrackRef.current === trackKey) return;
 
-    if (lastTrackRef.current !== trackKey) {
-      lastTrackRef.current = trackKey;
+    lastTrackRef.current = trackKey;
 
-      (async () => {
+    (async () => {
+      try {
         await CapacitorMusicControls.destroy();
         await CapacitorMusicControls.create({
           track: currentSong.title,
@@ -87,13 +109,17 @@ export function useMusicControls(
           notificationIcon: "notification",
           ticker: `Now playing "${currentSong.title}"`,
         });
-      })().catch((e) => console.error("MusicControls.create error:", e));
-    }
+      } catch (err) {
+        console.error("MusicControls.create error:", err);
+      }
+    })();
   }, [currentSong?.title, currentSong?.channel, currentSong?.thumbnail]);
 
-  // 🔁 Keep isPlaying in sync
+  // 🔁 Sync play/pause toggle
   useEffect(() => {
     if (!currentSong) return;
-    CapacitorMusicControls.updateIsPlaying({ isPlaying });
+    CapacitorMusicControls.updateIsPlaying({ isPlaying }).catch((err) =>
+      console.error("updateIsPlaying error:", err)
+    );
   }, [isPlaying, currentSong]);
 }

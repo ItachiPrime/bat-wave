@@ -2,7 +2,6 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, SkipBack, SkipForward } from "lucide-react";
 import { usePlayer } from "@/hooks/usePlayerContext";
-import { useMusicControls } from "@/hooks/useMusicControls";
 
 const MusicPlayer = () => {
   const {
@@ -11,22 +10,10 @@ const MusicPlayer = () => {
     currentTime,
     duration,
     togglePlay,
-    play,
-    pause,
     handleNext,
     handlePrevious,
     playerLoading,
   } = usePlayer();
-
-  // Call the music controls hook
-  useMusicControls(
-    currentSong,
-    isPlaying,
-    play, // Only play if not already playing
-    pause, // Only pause if currently playing
-    handleNext,
-    handlePrevious
-  );
 
   if (!currentSong) return null;
 
