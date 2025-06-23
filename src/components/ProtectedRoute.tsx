@@ -19,7 +19,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
             <span className="text-primary-foreground font-bold text-2xl font-orbitron">B</span>
           </div>
           <p className="text-muted-foreground font-orbitron uppercase tracking-wider">
-            INITIALIZING BATCAVE...
+            INITIALIZING BATWAVE...
           </p>
         </div>
       </div>

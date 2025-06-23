@@ -33,8 +33,8 @@ const Navbar = () => {
       <div className="flex items-center justify-between">
         {/* Logo and Name */}
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center bat-glow">
-            <span className="text-primary-foreground font-bold text-sm font-orbitron">B</span>
+          <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center bat-glow">
+            <img src="/logo.png" className='rounded-full w-8 h-8'/>
           </div>
           <h1 className="text-xl font-bold font-orbitron uppercase tracking-wider text-primary">
             BATWAVE
@@ -85,7 +85,7 @@ const Navbar = () => {
               variant="ghost"
               className="relative h-10 w-10 p-0 rounded-full hover:bg-transparent focus:bg-transparent focus:ring-0 hover:ring-0 active:bg-transparent active:ring-0 ring-0 ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
             >
-              <Avatar className="h-10 w-10 border-2 border-primary rounded-full">
+              <Avatar className="h-9 w-9 border-2 border-primary rounded-full">
                 <AvatarImage
                   src="/bat.png"
                   alt='User Avatar'

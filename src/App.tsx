@@ -16,6 +16,7 @@ import AuthPage from "./pages/AuthPage"; // Make sure AuthPage is imported
 import { useEffect } from "react";
 import { SearchProvider } from "@/context/SearchContext";
 import { UploadManagerProvider } from "@/context/UploadManagerContext";
+import { DownloadsProvider } from "./context/DownloadsContext";
 
 const queryClient = new QueryClient();
 
@@ -37,32 +38,37 @@ const App = () => {
         <AuthProvider>
           <AudioPlayerProvider>
             <Sonner />
-            <SearchProvider>
-              <UploadManagerProvider>
-                <BrowserRouter>
-                  <Routes>
-                    <Route path="/auth" element={<AuthPage />} />
-                    <Route
-                      element={
-                        <ProtectedRoute>
-                          <Layout />
-                        </ProtectedRoute>
-                      }
-                    >
-                      <Route index element={<SearchPage />} />
-                      <Route path="/downloads" element={<DownloadsPage />} />
-                      <Route path="/playlists" element={<PlaylistsPage />} />
-                      <Route path="/now-playing" element={<NowPlayingPage />} />
+            <DownloadsProvider>
+              <SearchProvider>
+                <UploadManagerProvider>
+                  <BrowserRouter>
+                    <Routes>
+                      <Route path="/auth" element={<AuthPage />} />
                       <Route
-                        path="/search"
-                        element={<Navigate to="/" replace />}
-                      />
-                    </Route>
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </BrowserRouter>
-              </UploadManagerProvider>
-            </SearchProvider>
+                        element={
+                          <ProtectedRoute>
+                            <Layout />
+                          </ProtectedRoute>
+                        }
+                      >
+                        <Route index element={<SearchPage />} />
+                        <Route path="/downloads" element={<DownloadsPage />} />
+                        <Route path="/playlists" element={<PlaylistsPage />} />
+                        <Route
+                          path="/now-playing"
+                          element={<NowPlayingPage />}
+                        />
+                        <Route
+                          path="/search"
+                          element={<Navigate to="/" replace />}
+                        />
+                      </Route>
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </BrowserRouter>
+                </UploadManagerProvider>
+              </SearchProvider>
+            </DownloadsProvider>
           </AudioPlayerProvider>
         </AuthProvider>
       </TooltipProvider>

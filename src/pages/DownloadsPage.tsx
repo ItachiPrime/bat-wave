@@ -6,104 +6,17 @@ import { Song } from "@/types/music";
 import { usePlayer } from "@/hooks/usePlayerContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useDownloadsContext } from "@/context/DownloadsContext";
+import { useAuth } from "@/hooks/useAuth";
 
-const COMMON_AUDIO_FOLDER = "songs";
-const COMMON_THUMBNAIL_FOLDER = "thumbnails";
 const fallbackThumbnail = "/fallback-thumbnail.png";
 
 const DownloadsPage = () => {
-  const [downloads, setDownloads] = useState<Song[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { downloads, setDownloads, loading, refetch } = useDownloadsContext();
   const { playPlaylist } = usePlayer();
   const { toast } = useToast();
-  const [userId, setUserId] = useState<string | null>(null);
-
-  // Fetch user once on mount
-  useEffect(() => {
-    let isMounted = true;
-    (async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (isMounted) setUserId(data?.user?.id || null);
-    })();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  // Fetch downloads when userId is available
-  useEffect(() => {
-    if (!userId) return;
-
-    let isMounted = true;
-    const fetchDownloads = async () => {
-      setLoading(true);
-
-      const { data: songsData, error: songsError } = await supabase
-        .from("songs")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-
-      if (songsError) {
-        toast({
-          title: "Fetch Error",
-          description: songsError.message,
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
-
-      // Get signed URLs for audio and thumbnail
-      const songsWithUrls = await Promise.all(
-        (songsData ?? []).map(async (song) => {
-          let audioUrl = "";
-          let thumbUrl = fallbackThumbnail;
-
-          if (song.audio_path) {
-            const { data: audioSigned } = await supabase.storage
-              .from("music")
-              .createSignedUrl(song.audio_path, 3600);
-            if (audioSigned?.signedUrl) {
-              audioUrl = audioSigned.signedUrl;
-            } else {
-              return null; // skip if audio not available
-            }
-          } else {
-            return null;
-          }
-
-          if (song.thumbnail) {
-            const { data: thumbSigned } = await supabase.storage
-              .from("music")
-              .createSignedUrl(song.thumbnail, 3600);
-            if (thumbSigned?.signedUrl) {
-              thumbUrl = thumbSigned.signedUrl;
-            }
-          }
-
-          return {
-            id: song.id,
-            title: song.title,
-            channel: song.channel,
-            duration: song.duration,
-            thumbnail: thumbUrl,
-            audioUrl,
-            isDownloaded: true,
-          };
-        })
-      );
-
-      const validSongs = songsWithUrls.filter(Boolean) as Song[];
-      if (isMounted) setDownloads(validSongs);
-      setLoading(false);
-    };
-
-    fetchDownloads();
-    return () => {
-      isMounted = false;
-    };
-  }, [userId, toast]);
+  const { user } = useAuth();
+  const userId = user?.id;
 
   // Play a single song from the downloads list, but as part of the playlist
   const handlePlay = (song: Song, index: number) => {
@@ -137,17 +50,13 @@ const DownloadsPage = () => {
     const song = downloads.find((s) => s.id === songId);
     if (!song || !userId) return;
 
-    setLoading(true);
-
     try {
-      // Remove only from songs table for this user
       await supabase
         .from("songs")
         .delete()
         .eq("id", songId)
         .eq("user_id", userId);
 
-      // Remove from UI
       setDownloads((prev) => prev.filter((s) => s.id !== songId));
 
       toast({
@@ -160,8 +69,6 @@ const DownloadsPage = () => {
         description: err.message || "Failed to delete song.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
