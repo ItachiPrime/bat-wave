@@ -2,7 +2,6 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, SkipBack, SkipForward } from "lucide-react";
 import { usePlayer } from "@/hooks/usePlayerContext";
-import { useEffect, useRef } from "react";
 
 const MusicPlayer = () => {
   const {
@@ -16,22 +15,11 @@ const MusicPlayer = () => {
     playerLoading,
   } = usePlayer();
 
-  const lastCurrentTimeRef = useRef(currentTime);
-
-  // Update it only when currentTime is valid
-  useEffect(() => {
-    if (currentTime > 0) {
-      lastCurrentTimeRef.current = currentTime;
-    }
-  }, [currentTime]);
-
   if (!currentSong) return null;
 
   // Progress % for top bar
-  const safeCurrentTime =
-    currentTime > 0 ? currentTime : lastCurrentTimeRef.current;
   const progressPercent = duration
-    ? Math.min((safeCurrentTime / duration) * 100, 100)
+    ? Math.min((currentTime / duration) * 100, 100)
     : 0;
 
   return (

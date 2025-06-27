@@ -35,10 +35,18 @@ const NowPlayingPage = () => {
 
   const [sliderValue, setSliderValue] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
+  const lastTimeRef = useRef(currentTime);
+
 
  useEffect(() => {
-    if (!isSeeking) setSliderValue(currentTime);
-  }, [currentTime, isSeeking]);
+  if (currentTime > 0) {
+    lastTimeRef.current = currentTime;
+  }
+  if (!isSeeking) {
+    setSliderValue(lastTimeRef.current);
+  }
+}, [currentTime, isSeeking]);
+
 
   // Reset slider on song/duration change
   useEffect(() => {
@@ -110,7 +118,7 @@ const NowPlayingPage = () => {
           className="w-full [&_.relative]:bg-bat-grey [&_[role=slider]]:bg-primary [&_[role=slider]]:border-primary [&_[role=slider]]:bat-glow"
         />
         <div className="flex justify-between text-sm text-muted-foreground font-orbitron">
-          <span>{formatTime(isSeeking ? sliderValue : currentTime)}</span>
+          <span>{formatTime(isSeeking ? sliderValue : lastTimeRef.current)}</span>
           <span>{formatTime(duration)}</span>
         </div>
       </div>
