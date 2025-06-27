@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { Song } from "@/types/music";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { RealtimeChannel } from "@supabase/supabase-js";
 import { useAuth } from "@/hooks/useAuth";
 
 type DownloadsContextType = {
@@ -91,8 +92,33 @@ export const DownloadsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setLoading(false);
   };
 
-  useEffect(() => {
-    if (userId) fetchDownloads();
+ useEffect(() => {
+    if (!userId) return;
+
+    fetchDownloads();
+
+    // Subscribe to real-time changes in the songs table for this user
+    const channel = supabase
+      .channel('songs-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'songs',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          // On insert, update, or delete, re-fetch downloads
+          fetchDownloads();
+        }
+      )
+      .subscribe();
+
+    // Cleanup on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
     // eslint-disable-next-line
   }, [userId]);
 

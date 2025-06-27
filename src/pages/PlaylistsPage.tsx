@@ -33,7 +33,6 @@ const PlaylistsPage = () => {
     playlists,
     createPlaylist,
     deletePlaylist,
-    renamePlaylist,
     addSongToPlaylist,
     removeSongFromPlaylist,
   } = usePlaylistContext();
@@ -43,9 +42,8 @@ const PlaylistsPage = () => {
 
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editPlaylistId, setEditPlaylistId] = useState<string | null>(null);
-  const [renameValue, setRenameValue] = useState("");
   const [editSongsId, setEditSongsId] = useState<string | null>(null);
+  const [addingSongId, setAddingSongId] = useState<string | null>(null);
 
   const handlePlayPlaylist = (playlistSongs: Song[]) => {
     if (playlistSongs.length > 0) {
@@ -241,11 +239,13 @@ const PlaylistsPage = () => {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() =>
-                                    addSongToPlaylist(playlist.id, song)
-                                  }
+                                  onClick={async () => {
+                                    setAddingSongId(song.id);
+                                    await addSongToPlaylist(playlist.id, song);
+                                    setAddingSongId(null);
+                                  }}
                                 >
-                                  Add
+                                  { addSongToPlaylist ? "Adding" :"Add"}
                                 </Button>
                               </div>
                             ))}
