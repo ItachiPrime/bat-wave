@@ -74,7 +74,7 @@ const DownloadsPage = () => {
 
   return (
     <div className="flex flex-col h-full px-4 pt-4">
-      <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-4 bat-gradient rounded-lg p-3 sm:p-4 border border-border mb-4 flex justify-between items-center">
+      <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 bat-gradient rounded-lg p-3 sm:p-4 border border-border mb-4 flex justify-between items-center">
         <h1 className="text-xl sm:text-2xl font-bold font-orbitron uppercase tracking-wider text-primary responsive-text-2xl">
           DOWNLOADS
         </h1>

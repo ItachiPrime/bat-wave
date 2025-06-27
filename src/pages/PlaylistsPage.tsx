@@ -43,7 +43,7 @@ const PlaylistsPage = () => {
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editSongsId, setEditSongsId] = useState<string | null>(null);
-  const [addingSongId, setAddingSongId] = useState<string | null>(null);
+  const [addingSongIds, setAddingSongIds] = useState<string[]>([]);
 
   const handlePlayPlaylist = (playlistSongs: Song[]) => {
     if (playlistSongs.length > 0) {
@@ -221,34 +221,46 @@ const PlaylistsPage = () => {
                               (s) =>
                                 !playlist.songs.some((ps) => ps.id === s.id)
                             )
-                            .map((song) => (
-                              <div
-                                key={song.id}
-                                className="flex items-center justify-between gap-2"
-                              >
-                                <div className="flex items-center gap-2 overflow-hidden">
-                                  <img
-                                    src={song.thumbnail}
-                                    alt={song.title}
-                                    className="w-8 h-8 rounded object-cover border border-border"
-                                  />
-                                  <span className="truncate text-xs">
-                                    {song.title}
-                                  </span>
-                                </div>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={async () => {
-                                    setAddingSongId(song.id);
-                                    await addSongToPlaylist(playlist.id, song);
-                                    setAddingSongId(null);
-                                  }}
+                            .map((song) => {
+                              const isAdding = addingSongIds.includes(song.id);
+                              return (
+                                <div
+                                  key={song.id}
+                                  className="flex items-center justify-between gap-2"
                                 >
-                                  { addSongToPlaylist ? "Adding" :"Add"}
-                                </Button>
-                              </div>
-                            ))}
+                                  <div className="flex items-center gap-2 overflow-hidden">
+                                    <img
+                                      src={song.thumbnail}
+                                      alt={song.title}
+                                      className="w-8 h-8 rounded object-cover border border-border"
+                                    />
+                                    <span className="truncate text-xs">
+                                      {song.title}
+                                    </span>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    disabled={isAdding}
+                                    onClick={async () => {
+                                      setAddingSongIds((prev) => [
+                                        ...prev,
+                                        song.id,
+                                      ]);
+                                      await addSongToPlaylist(
+                                        playlist.id,
+                                        song
+                                      );
+                                      setAddingSongIds((prev) =>
+                                        prev.filter((id) => id !== song.id)
+                                      );
+                                    }}
+                                  >
+                                    {isAdding ? "Adding" : "Add"}
+                                  </Button>
+                                </div>
+                              );
+                            })}
                           {downloads.filter(
                             (s) => !playlist.songs.some((ps) => ps.id === s.id)
                           ).length === 0 && (
