@@ -18,11 +18,13 @@ import { SearchProvider } from "@/context/SearchContext";
 import { UploadManagerProvider } from "@/context/UploadManagerContext";
 import { DownloadsProvider } from "./context/DownloadsContext";
 import { PlaylistProvider } from "./context/PlaylistContext";
+import { ensureIgnoreBatteryOptimizations } from "./utils/batteryOptimization";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   useEffect(() => {
+    ensureIgnoreBatteryOptimizations();
     const setVh = () => {
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty("--vh", `${vh}px`);
