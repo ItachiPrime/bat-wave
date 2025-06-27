@@ -17,6 +17,7 @@ import { useEffect } from "react";
 import { SearchProvider } from "@/context/SearchContext";
 import { UploadManagerProvider } from "@/context/UploadManagerContext";
 import { DownloadsProvider } from "./context/DownloadsContext";
+import { PlaylistProvider } from "./context/PlaylistContext";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => {
         <AuthProvider>
           <AudioPlayerProvider>
             <Sonner />
+            <PlaylistProvider>
             <DownloadsProvider>
               <SearchProvider>
                 <UploadManagerProvider>
@@ -69,6 +71,7 @@ const App = () => {
                 </UploadManagerProvider>
               </SearchProvider>
             </DownloadsProvider>
+            </PlaylistProvider>
           </AudioPlayerProvider>
         </AuthProvider>
       </TooltipProvider>

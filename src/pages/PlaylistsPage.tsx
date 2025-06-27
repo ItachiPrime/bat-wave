@@ -1,54 +1,55 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Play, Music } from 'lucide-react';
-import { Playlist } from '@/types/music';
-import { usePlayer } from '@/hooks/usePlayerContext';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Plus,
+  Play,
+  Music,
+  Edit,
+  Trash2,
+  X,
+  Edit2Icon,
+  PlayIcon,
+  PlaySquare,
+} from "lucide-react";
+import { usePlaylistContext } from "@/context/PlaylistContext";
+import { useDownloadsContext } from "@/context/DownloadsContext";
+import { usePlayer } from "@/hooks/usePlayerContext";
+import { useToast } from "@/hooks/use-toast";
+import { Song } from "@/types/music";
+
+const fallbackThumbnail = "/logo.png";
 
 const PlaylistsPage = () => {
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [newPlaylistName, setNewPlaylistName] = useState('');
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const {
+    playlists,
+    createPlaylist,
+    deletePlaylist,
+    renamePlaylist,
+    addSongToPlaylist,
+    removeSongFromPlaylist,
+  } = usePlaylistContext();
+  const { downloads } = useDownloadsContext();
   const { playPlaylist } = usePlayer();
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Load playlists from localStorage
-    const savedPlaylists = localStorage.getItem('playlists');
-    if (savedPlaylists) {
-      setPlaylists(JSON.parse(savedPlaylists));
-    }
-  }, []);
+  const [newPlaylistName, setNewPlaylistName] = useState("");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editPlaylistId, setEditPlaylistId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [editSongsId, setEditSongsId] = useState<string | null>(null);
 
-  const createPlaylist = () => {
-    if (!newPlaylistName.trim()) return;
-
-    const newPlaylist: Playlist = {
-      id: Date.now().toString(),
-      name: newPlaylistName,
-      songs: [],
-      createdAt: new Date(),
-    };
-
-    const updatedPlaylists = [...playlists, newPlaylist];
-    setPlaylists(updatedPlaylists);
-    localStorage.setItem('playlists', JSON.stringify(updatedPlaylists));
-    
-    setNewPlaylistName('');
-    setIsCreateDialogOpen(false);
-    
-    toast({
-      title: "PLAYLIST CREATED",
-      description: `"${newPlaylistName}" has been created.`,
-    });
-  };
-
-  const handlePlayPlaylist = (playlist: Playlist) => {
-    if (playlist.songs.length > 0) {
-      playPlaylist(playlist.songs, 0);
+  const handlePlayPlaylist = (playlistSongs: Song[]) => {
+    if (playlistSongs.length > 0) {
+      playPlaylist(playlistSongs, 0);
     } else {
       toast({
         title: "EMPTY PLAYLIST",
@@ -58,7 +59,7 @@ const PlaylistsPage = () => {
   };
 
   return (
-    <div className="flex-1 p-3 sm:p-4 space-y-4 overflow-auto mobile-full-height">
+    <div className="flex-1 p-4 sm:p-6 space-y-4 overflow-auto mobile-full-height">
       <div className="flex items-center justify-between bat-gradient rounded-lg p-3 sm:p-4 border border-border">
         <h1 className="text-xl sm:text-2xl font-bold font-orbitron uppercase tracking-wider text-primary responsive-text-2xl">
           PLAYLISTS
@@ -71,7 +72,7 @@ const PlaylistsPage = () => {
               <span className="sm:hidden">CREATE</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-card border-border mx-2 max-w-sm sm:max-w-md ml-0">
+          <DialogContent>
             <DialogHeader>
               <DialogTitle className="font-orbitron uppercase tracking-wider text-primary text-sm sm:text-base">
                 CREATE NEW PLAYLIST
@@ -82,19 +83,40 @@ const PlaylistsPage = () => {
                 placeholder="Enter playlist name..."
                 value={newPlaylistName}
                 onChange={(e) => setNewPlaylistName(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && createPlaylist()}
+                onKeyDown={(e) =>
+                  e.key === "Enter" &&
+                  newPlaylistName.trim() &&
+                  (() => {
+                    createPlaylist(newPlaylistName.trim());
+                    setNewPlaylistName("");
+                    setIsCreateDialogOpen(false);
+                    toast({
+                      title: "PLAYLIST CREATED",
+                      description: `"${newPlaylistName}" has been created.`,
+                    });
+                  })()
+                }
                 className="bg-bat-grey border-border focus:border-primary focus:bat-glow font-orbitron"
               />
               <div className="flex justify-end gap-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setIsCreateDialogOpen(false)}
                   className="border-border hover:border-primary font-orbitron uppercase text-xs"
                 >
                   CANCEL
                 </Button>
-                <Button 
-                  onClick={createPlaylist} 
+                <Button
+                  onClick={() => {
+                    if (!newPlaylistName.trim()) return;
+                    createPlaylist(newPlaylistName.trim());
+                    setNewPlaylistName("");
+                    setIsCreateDialogOpen(false);
+                    toast({
+                      title: "PLAYLIST CREATED",
+                      description: `"${newPlaylistName}" has been created.`,
+                    });
+                  }}
                   disabled={!newPlaylistName.trim()}
                   className="bat-glow font-orbitron uppercase text-xs"
                 >
@@ -110,38 +132,177 @@ const PlaylistsPage = () => {
         <div className="text-center py-12">
           <div className="text-muted-foreground mb-4">
             <Music className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p className="font-orbitron uppercase tracking-wider responsive-text-lg">NO PLAYLISTS YET</p>
-            <p className="text-sm font-orbitron mt-2">Create your first playlist to organize your music</p>
+            <p className="font-orbitron uppercase tracking-wider responsive-text-lg">
+              NO PLAYLISTS YET
+            </p>
+            <p className="text-sm font-orbitron mt-2">
+              Create your first playlist to organize your music
+            </p>
           </div>
         </div>
       ) : (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 pb-4">
-          {playlists.map((playlist) => (
-            <Card 
-              key={playlist.id} 
-              className="cursor-pointer hover:shadow-md transition-all duration-300 bg-card border-border hover:border-primary/50 hover:bat-glow-blue"
-            >
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base sm:text-lg truncate font-orbitron uppercase tracking-wider">
-                  {playlist.name}
-                </CardTitle>
-                <p className="text-sm text-muted-foreground font-orbitron">
-                  {playlist.songs.length} SONG{playlist.songs.length !== 1 ? 'S' : ''}
-                </p>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <Button 
-                  className="w-full bat-glow hover:animate-glow-pulse font-orbitron uppercase tracking-wider text-xs" 
-                  variant="outline" 
-                  onClick={() => handlePlayPlaylist(playlist)}
-                  disabled={playlist.songs.length === 0}
-                >
-                  <Play className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  PLAY PLAYLIST
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="flex flex-col pb-4 gap-3">
+          {playlists.map((playlist) => {
+            // Use the first song's thumbnail as playlist cover, or fallback
+            const cover = playlist.songs[0]?.thumbnail || fallbackThumbnail;
+            return (
+              <Card
+                key={playlist.id}
+                className="bg-card shadow-lg rounded-lg overflow-hidden flex gap-4 items-center p-3 relative"
+              >
+                {/* Playlist Cover */}
+                <div className="w-14 h-14 shrink-0 rounded overflow-hidden relative">
+                  <img
+                    src={cover}
+                    alt={playlist.name}
+                    className="w-full h-full object-cover rounded"
+                  />
+                  {playlist.songs.length >= 1 && (
+                    <Button
+                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
+             z-50 rounded-full bg-primary hover:bg-primary 
+             text-black shadow w-2 h-2 p-2"
+                      onClick={() => handlePlayPlaylist(playlist.songs)}
+                    >
+                      <PlayIcon className="w-2 h-2 p-1" />
+                    </Button>
+                  )}
+                </div>
+
+                {/* Playlist Details */}
+                <div className="flex-1 overflow-hidden">
+                  <div className="flex justify-between items-start gap-2">
+                    <CardTitle className="text-base sm:text-lg font-orbitron uppercase tracking-wide truncate pt-2">
+                      {playlist.name}
+                    </CardTitle>
+                    <div className="flex items-center flex-row gap-2">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="font-orbitron uppercase tracking-wider text-xs text-primary w-11 h-10 rounded-lg"
+                        onClick={() => setEditSongsId(playlist.id)}
+                      >
+                        <Edit2Icon />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => deletePlaylist(playlist.id)}
+                        className="font-orbitron uppercase tracking-wider text-xs w-11 h-10 rounded-lg"
+                      >
+                        <Trash2 className="text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Edit Songs Dialog */}
+                {editSongsId === playlist.id && (
+                  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-card w-full max-w-sm rounded-lg p-4 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+                      <div className="flex justify-between items-center">
+                        <h2 className="font-orbitron uppercase text-sm">
+                          Edit Songs
+                        </h2>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => setEditSongsId(null)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      <div>
+                        <span className="text-xs font-orbitron text-muted-foreground">
+                          Add Downloaded Songs:
+                        </span>
+                        <div className="mt-1 space-y-2">
+                          {downloads
+                            .filter(
+                              (s) =>
+                                !playlist.songs.some((ps) => ps.id === s.id)
+                            )
+                            .map((song) => (
+                              <div
+                                key={song.id}
+                                className="flex items-center justify-between gap-2"
+                              >
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                  <img
+                                    src={song.thumbnail}
+                                    alt={song.title}
+                                    className="w-8 h-8 rounded object-cover border border-border"
+                                  />
+                                  <span className="truncate text-xs">
+                                    {song.title}
+                                  </span>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    addSongToPlaylist(playlist.id, song)
+                                  }
+                                >
+                                  Add
+                                </Button>
+                              </div>
+                            ))}
+                          {downloads.filter(
+                            (s) => !playlist.songs.some((ps) => ps.id === s.id)
+                          ).length === 0 && (
+                            <span className="text-xs text-muted-foreground">
+                              No more songs to add.
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-xs font-orbitron text-muted-foreground">
+                          Playlist Songs:
+                        </span>
+                        <div className="mt-1 space-y-2">
+                          {playlist.songs.length === 0 && (
+                            <span className="text-xs text-muted-foreground">
+                              No songs in playlist.
+                            </span>
+                          )}
+                          {playlist.songs.map((song) => (
+                            <div
+                              key={song.id}
+                              className="flex items-center justify-between gap-2"
+                            >
+                              <div className="flex items-center gap-2 overflow-hidden">
+                                <img
+                                  src={song.thumbnail || fallbackThumbnail}
+                                  alt={song.title}
+                                  className="w-8 h-8 rounded object-cover border border-border"
+                                />
+                                <span className="truncate text-xs">
+                                  {song.title}
+                                </span>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  removeSongFromPlaylist(playlist.id, song.id)
+                                }
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

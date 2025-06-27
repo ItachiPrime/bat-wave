@@ -14,9 +14,8 @@ export interface Song {
 export interface Playlist {
   id: string;
   name: string;
-  songs: Song[];
-  createdAt: Date;
-  thumbnail?: string;
+  songs: Song[]; 
+  createdAt: Date | string;
 }
 
 export type RepeatMode = "none" | "one" | "all";
