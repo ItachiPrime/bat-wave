@@ -1,13 +1,18 @@
-export async function ensureIgnoreBatteryOptimizations() {
-  if (window.Capacitor?.getPlatform?.() !== "android") return;
+import { Capacitor } from '@capacitor/core';
+import { BatteryOptimization } from '@capawesome-team/capacitor-android-battery-optimization';
+
+export const ensureIgnoreBatteryOptimizations = async () => {
+  if (Capacitor.getPlatform() !== 'android') return;
 
   try {
-    const ignoring = await (window as any).BatteryHelper.isIgnoringBatteryOptimizations();
-    if (!ignoring) {
-      // You can optionally show a custom dialog here before requesting
-      (window as any).BatteryHelper.requestIgnoreBatteryOptimizations();
+    const { enabled } = await BatteryOptimization.isBatteryOptimizationEnabled();
+
+    if (enabled) {
+      // ✅ ONLY show the system overlay (Allow / Deny)
+      await BatteryOptimization.requestIgnoreBatteryOptimization();
     }
+    // Else: already ignored or not required — do nothing
   } catch (err) {
-    console.error("Battery optimization check failed:", err);
+    console.error('Battery optimization request failed:', err);
   }
-}
+};
