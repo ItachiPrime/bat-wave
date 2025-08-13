@@ -25,28 +25,11 @@ const SearchPage: React.FC = () => {
   const COMMON_AUDIO_FOLDER = "songs";
   const COMMON_THUMBNAIL_FOLDER = "thumbnails";
 
-  // --- Add mounted ref to prevent setState on unmounted ---
-  const mounted = useRef(true);
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
-  //
-
-  useEffect(() => {
-    (async () => {
-      // No need to set userId here; it's derived from useAuth()
-      await supabase.auth.getUser();
-    })();
-  }, []);
-
   // Search Functionality
   const handleSearch = async () => {
     if (!query.trim()) return;
-    if (mounted.current) setLoading(true);
-    if (mounted.current) setResults([]);
+    setLoading(true);
+    setResults([]);
     try {
       const resp = await fetch(
         `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=${encodeURIComponent(
@@ -58,7 +41,7 @@ const SearchPage: React.FC = () => {
         throw new Error(json.error?.message || "YouTube API error");
       const items = json.items || [];
 
-      const songResults: Song[] = items.map((item: any) => ({
+      const songResults: Song[] = items.map((item: { id: { videoId: string; }; snippet: { title: string; channelTitle: string; thumbnails: { medium: { url: string; }; }; }; }) => ({
         id: item.id.videoId,
         title: item.snippet.title,
         channel: item.snippet.channelTitle,
@@ -68,12 +51,12 @@ const SearchPage: React.FC = () => {
       }));
 
       if (!songResults.length) {
-        if (mounted.current) setResults([]);
+        setResults([]);
         toast({
           title: "NO RESULTS",
           description: "No songs found.",
         });
-        if (mounted.current) setLoading(false);
+        setLoading(false);
         return;
       }
 
@@ -105,42 +88,40 @@ const SearchPage: React.FC = () => {
           .select("id")
           .eq("user_id", userId);
         if (!error && downloaded) {
-          downloadedIds = downloaded.map((d: any) => d.id);
+          downloadedIds = downloaded.map((d: { id: string; }) => d.id);
         }
       }
 
-      if (mounted.current) {
-        setResults(
-          songResults.map((s) => {
-            const detail = details.find((d: any) => d.id === s.id);
-            return {
-              ...s,
-              duration: detail
-                ? getDur(detail.contentDetails.duration)
-                : "0:00",
-              isDownloaded: downloadedIds.includes(s.id),
-            };
-          })
-        );
-        toast({
-          title: "SEARCH COMPLETE",
-          description: `Found ${items.length} results`,
-        });
-      }
-    } catch (err: any) {
+      setResults(
+        songResults.map((s) => {
+          const detail = details.find((d: { id: string; contentDetails: { duration: string; }; }) => d.id === s.id);
+          return {
+            ...s,
+            duration: detail
+              ? getDur(detail.contentDetails.duration)
+              : "0:00",
+            isDownloaded: downloadedIds.includes(s.id),
+          };
+        })
+      );
+      toast({
+        title: "SEARCH COMPLETE",
+        description: `Found ${items.length} results`,
+      });
+    } catch (err) {
       toast({
         title: "SEARCH ERROR",
-        description: err.message || "Unknown error",
+        description: (err as Error).message || "Unknown error",
         variant: "destructive",
       });
     } finally {
-      if (mounted.current) setLoading(false);
+      setLoading(false);
     }
   };
 
   const sanitizeFileName = (title: string) =>
     title
-      .replace(/[\/\\?%*:|"<>]/g, "")
+      .replace(/[\\/?%*:|"<>]/g, "")
       .replace(/[^\w\s]/gi, "_")
       .replace(/\s+/g, "_")
       .trim();
@@ -156,8 +137,8 @@ const SearchPage: React.FC = () => {
       return;
     }
 
-    if (mounted.current) setProcessingId(song.id);
-    if (mounted.current) setUploadingId(song.id);
+    setProcessingId(song.id);
+    setUploadingId(song.id);
 
     const filename = `${sanitizeFileName(song.title)}.mp3`;
     const audioStoragePath = `${COMMON_AUDIO_FOLDER}/${filename}`;
@@ -172,7 +153,7 @@ const SearchPage: React.FC = () => {
       if (
         !listErr &&
         fileList &&
-        fileList.some((f: any) => f.name === filename)
+        fileList.some((f: { name: string; }) => f.name === filename)
       ) {
         fileExists = true;
       }
@@ -221,7 +202,7 @@ const SearchPage: React.FC = () => {
           if (
             !thumbListErr &&
             thumbList &&
-            thumbList.some((f: any) => f.name === thumbFilename)
+            thumbList.some((f: { name: string; }) => f.name === thumbFilename)
           ) {
             thumbExists = true;
           }
@@ -245,7 +226,7 @@ const SearchPage: React.FC = () => {
       // Always insert a new row for this user, referencing the common audio/thumbnail
       await supabase.from("songs").upsert([
         {
-          id: song.id,
+          video_id: song.id,
           user_id: userId,
           title: song.title,
           channel: song.channel,
@@ -256,27 +237,25 @@ const SearchPage: React.FC = () => {
         },
       ]);
 
-      if (mounted.current) {
-        setResults(
-          results.map((s: Song) =>
-            s.id === song.id ? { ...s, isDownloaded: true } : s
-          )
-        );
-        toast({
-          title: "DOWNLOADED",
-          description: `Saved "${song.title}"`,
-        });
-      }
-    } catch (err: any) {
+      setResults(
+        results.map((s: Song) =>
+          s.id === song.id ? { ...s, isDownloaded: true } : s
+        )
+      );
+      toast({
+        title: "DOWNLOADED",
+        description: `Saved "${song.title}"`,
+      });
+    } catch (err) {
       toast({
         title: "DOWNLOAD ERROR",
-        description: err.message || "Unknown error",
+        description: (err as Error).message || "Unknown error",
         variant: "destructive",
       });
       console.log("Download error:", err);
     } finally {
-      if (mounted.current) setProcessingId(null);
-      if (mounted.current) setUploadingId(null);
+      setProcessingId(null);
+      setUploadingId(null);
     }
   };
 
@@ -291,7 +270,7 @@ const SearchPage: React.FC = () => {
       return;
     }
 
-    if (mounted.current) setProcessingId(song.id);
+    setProcessingId(song.id);
 
     const filename = `${sanitizeFileName(song.title)}.mp3`;
     const audioStoragePath = `${COMMON_AUDIO_FOLDER}/${filename}`;
@@ -323,91 +302,15 @@ const SearchPage: React.FC = () => {
           duration: song.duration,
         });
 
-        // Move upload logic to UploadManager
-        addTask(async () => {
-          try {
-            setCurrentFile(song.title);
-            // Fetch the file as a blob with progress
-            const response = await fetch(j.link);
-            const reader = response.body?.getReader();
-            const contentLength = +response.headers.get("Content-Length")!;
-            let received = 0;
-            const chunks = [];
-            while (true) {
-              const { done, value } = await reader!.read();
-              if (done) break;
-              chunks.push(value);
-              received += value.length;
-              setProgress(Math.round((received / contentLength) * 100));
-            }
-            const blob = new Blob(chunks, { type: "audio/mpeg" });
-            await supabase.storage
-              .from("music")
-              .upload(audioStoragePath, blob, {
-                contentType: "audio/mpeg",
-                upsert: true,
-              });
-
-            let thumbnailStoragePath: string | null = null;
-            if (song.thumbnail) {
-              try {
-                const thumbResp = await fetch(song.thumbnail);
-                const thumbBlob = await thumbResp.blob();
-                const thumbExt =
-                  song.thumbnail.split(".").pop()?.split("?")[0] || "jpg";
-                const thumbFilename = `${sanitizeFileName(
-                  song.title
-                )}.${thumbExt}`;
-                thumbnailStoragePath = `${COMMON_THUMBNAIL_FOLDER}/${thumbFilename}`;
-                await supabase.storage
-                  .from("music")
-                  .upload(thumbnailStoragePath, thumbBlob, {
-                    contentType: thumbBlob.type || "image/jpeg",
-                    upsert: true,
-                  });
-              } catch (e) {
-                thumbnailStoragePath = null;
-              }
-            }
-
-            await supabase.from("songs").upsert([
-              {
-                id: song.id,
-                user_id: userId,
-                title: song.title,
-                channel: song.channel,
-                duration: song.duration,
-                thumbnail: thumbnailStoragePath,
-                audio_path: audioStoragePath,
-                created_at: new Date().toISOString(),
-              },
-            ]);
-
-            if (mounted.current) {
-              setResults(
-                results.map((s: Song) =>
-                  s.id === song.id ? { ...s, isDownloaded: true } : s
-                )
-              );
-            }
-          } catch (err) {
-            // handle error if needed
-          } finally {
-            setProgress(0);
-            setCurrentFile(null);
-            if (mounted.current) setUploadingId(null);
-          }
-        });
-
-        if (mounted.current) setProcessingId(null);
+        setProcessingId(null);
         return;
-      } catch (err: any) {
+      } catch (err) {
         toast({
           title: "PLAYBACK ERROR",
-          description: err.message || "Unknown error",
+          description: (err as Error).message || "Unknown error",
           variant: "destructive",
         });
-        if (mounted.current) setProcessingId(null);
+        setProcessingId(null);
         return;
       }
     }
@@ -431,7 +334,7 @@ const SearchPage: React.FC = () => {
         }
         await supabase.from("songs").upsert([
           {
-            id: song.id,
+            video_id: song.id,
             user_id: userId,
             title: song.title,
             channel: song.channel,
@@ -442,19 +345,17 @@ const SearchPage: React.FC = () => {
           },
         ]);
       }
-      if (mounted.current) {
-        setResults(
-          results.map((s: Song) =>
-            s.id === song.id ? { ...s, isDownloaded: true } : s
-          )
-        );
-      }
+      setResults(
+        results.map((s: Song) =>
+          s.id === song.id ? { ...s, isDownloaded: true } : s
+        )
+      );
     } catch (err) {
       // Optionally handle error
     }
 
     playSingleSong({ ...song, audioUrl: playbackUrl, duration: song.duration });
-    if (mounted.current) setProcessingId(null);
+    setProcessingId(null);
   };
 
   return (
